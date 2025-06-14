@@ -1,11 +1,11 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Play, Edit, Trash2, FolderOpen, Copy, Star } from 'lucide-react';
+import { Plus, Play, Edit, Trash2, FolderOpen, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useWorkflows, Workflow } from '@/hooks/useWorkflows';
+import { CreateWorkflowDialog } from '@/components/CreateWorkflowDialog';
 import { toast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
@@ -14,6 +14,7 @@ const Dashboard = () => {
   const [loadingWorkflows, setLoadingWorkflows] = useState(true);
   const [editingWorkflow, setEditingWorkflow] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   useEffect(() => {
     const fetchWorkflows = async () => {
@@ -30,11 +31,11 @@ const Dashboard = () => {
   }, []);
 
   const handleCreateNew = () => {
-    navigate('/builder');
+    setShowCreateDialog(true);
   };
 
   const handleOpenWorkflow = (workflow: Workflow) => {
-    navigate(`/builder?workflow=${workflow.id}`);
+    navigate(`/builder/${workflow.id}`);
   };
 
   const handleDeleteWorkflow = async (workflowId: string, workflowName: string) => {
@@ -105,7 +106,6 @@ const Dashboard = () => {
   const duplicateWorkflow = async (workflow: Workflow) => {
     try {
       const duplicatedName = `${workflow.name} (Copy)`;
-      // This would need to be implemented in useWorkflows hook
       toast({
         title: "Feature Coming Soon",
         description: "Workflow duplication will be available soon.",
@@ -235,7 +235,6 @@ const Dashboard = () => {
                   <CardContent className="p-4 pt-0">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        {/* Workflow type badges - you can customize these based on workflow content */}
                         <span className="px-2 py-1 bg-blue-600 text-xs rounded text-white">TEXT</span>
                         <span className="px-2 py-1 bg-purple-600 text-xs rounded text-white">IMAGE</span>
                       </div>
@@ -266,6 +265,11 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      <CreateWorkflowDialog 
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog} 
+      />
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Node, Edge } from '@xyflow/react';
 import { supabase } from '@/integrations/supabase/client';
@@ -55,12 +56,23 @@ export const useWorkflows = () => {
   const updateWorkflow = async (id: string, updates: Partial<Workflow>) => {
     setIsLoading(true);
     try {
+      // Prepare the update object with proper type casting
+      const updateData: any = {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Cast nodes and edges to Json if they exist
+      if (updates.nodes) {
+        updateData.nodes = updates.nodes as any;
+      }
+      if (updates.edges) {
+        updateData.edges = updates.edges as any;
+      }
+
       const { data, error } = await supabase
         .from('workflows')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -144,6 +156,54 @@ export const useWorkflows = () => {
     }
   };
 
+  const createWorkflow = async (name: string, description: string = '') => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('workflows')
+        .insert({
+          name,
+          description,
+          nodes: [],
+          edges: [],
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Add to local state
+      const newWorkflow: Workflow = {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        nodes: [],
+        edges: [],
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      };
+
+      setWorkflows(prev => [newWorkflow, ...prev]);
+
+      toast({
+        title: "Workflow Created",
+        description: `"${name}" has been created successfully!`,
+      });
+
+      return newWorkflow;
+    } catch (error) {
+      console.error('Error creating workflow:', error);
+      toast({
+        title: "Creation Failed",
+        description: "Failed to create workflow. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     workflows,
     isLoading,
@@ -151,5 +211,6 @@ export const useWorkflows = () => {
     updateWorkflow,
     loadWorkflows,
     deleteWorkflow,
+    createWorkflow,
   };
 };

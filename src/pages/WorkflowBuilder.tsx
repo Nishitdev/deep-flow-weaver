@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { WorkflowBuilder as WorkflowBuilderComponent } from '@/components/WorkflowBuilder';
@@ -9,8 +9,7 @@ import { toast } from '@/hooks/use-toast';
 
 const WorkflowBuilderPage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const workflowId = searchParams.get('workflow');
+  const { workflowId } = useParams<{ workflowId: string }>();
   const { loadWorkflows } = useWorkflows();
   const [loadedWorkflow, setLoadedWorkflow] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -54,29 +53,29 @@ const WorkflowBuilderPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading workflow...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading workflow...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col">
-      <div className="h-16 border-b border-border bg-card/50 backdrop-blur-sm flex items-center px-6">
+    <div className="h-screen flex flex-col bg-black text-white">
+      <div className="h-16 border-b border-gray-700 bg-gray-900 flex items-center px-6">
         <Button
           variant="ghost"
           size="sm"
           onClick={handleBackToDashboard}
-          className="mr-4"
+          className="mr-4 text-gray-300 hover:text-white"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Dashboard
         </Button>
         <div className="flex-1">
-          <h1 className="text-lg font-semibold">
+          <h1 className="text-lg font-semibold text-white">
             {loadedWorkflow ? `Editing: ${loadedWorkflow.name}` : 'New Workflow'}
           </h1>
         </div>
