@@ -1,48 +1,41 @@
 import React, { useCallback, useState, useEffect, useRef } from 'react';
 import {
-  ReactFlow,
-  Node,
-  Edge,
   addEdge,
   Connection,
   useNodesState,
   useEdgesState,
-  Controls,
-  Background,
-  MiniMap,
-  BackgroundVariant,
   useReactFlow,
   ReactFlowProvider,
-  SelectionMode,
+  Node,
+  Edge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { WorkflowNode } from './WorkflowNode';
+
+// Import refactored components
 import { Sidebar } from './WorkflowSidebar';
 import { WorkflowHeader } from './WorkflowHeader';
+import { WorkflowCanvas } from './workflow/WorkflowCanvas';
+import { WorkflowToolbar } from './workflow/WorkflowToolbar';
+
+// Import dialog components
 import { NodeConfigPanel } from './NodeConfigPanel';
 import { SaveWorkflowDialog } from './SaveWorkflowDialog';
 import { LoadWorkflowDialog } from './LoadWorkflowDialog';
 import { WorkflowLogs } from './WorkflowLogs';
-import { Play, Square, Save, FolderOpen, Logs } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
-import { WorkflowNodeData } from '@/types/workflow';
-import { Workflow, useWorkflows } from '@/hooks/useWorkflows';
 import { ExecutionHistory } from './ExecutionHistory';
 import { PerformanceMetrics } from './PerformanceMetrics';
 import { DebugMode } from './DebugMode';
-import { CustomCodeNode } from './CustomCodeNode';
 import { SettingsDialog } from './SettingsDialog';
+
+// Import utilities and types
+import { toast } from '@/hooks/use-toast';
+import { WorkflowNodeData } from '@/types/workflow';
+import { Workflow, useWorkflows } from '@/hooks/useWorkflows';
 import { ReplicateService } from '@/services/replicateService';
 
-const nodeTypes = {
-  workflowNode: WorkflowNode,
-  customCode: CustomCodeNode,
-};
-
-const initialNodes: Node[] = [];
-const initialEdges: Edge[] = [];
-
+/**
+ * Execution log entry interface
+ */
 interface LogEntry {
   id: string;
   timestamp: string;
@@ -52,28 +45,49 @@ interface LogEntry {
   nodeName?: string;
 }
 
+/**
+ * WorkflowBuilder Props
+ */
 interface WorkflowBuilderProps {
   initialWorkflow?: Workflow | null;
 }
 
+const initialNodes: Node[] = [];
+const initialEdges: Edge[] = [];
+
+/**
+ * WorkflowBuilderContent Component
+ * 
+ * Main content component for the workflow builder.
+ * Handles all workflow operations, state management, and node execution.
+ */
 const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflow }) => {
+  // React Flow state
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const { screenToFlowPosition } = useReactFlow();
+
+  // UI state
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const [isExecuting, setIsExecuting] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
+
+  // Dialog states
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showLoadDialog, setShowLoadDialog] = useState(false);
   const [showLogsDialog, setShowLogsDialog] = useState(false);
   const [showExecutionHistory, setShowExecutionHistory] = useState(false);
   const [showPerformanceMetrics, setShowPerformanceMetrics] = useState(false);
   const [showDebugMode, setShowDebugMode] = useState(false);
-  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
-  const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
+
+  // Execution state
+  const [isExecuting, setIsExecuting] = useState(false);
   const [executionLogs, setExecutionLogs] = useState<LogEntry[]>([]);
+  const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
+
+  // Hooks and refs
   const { updateWorkflow } = useWorkflows();
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { screenToFlowPosition } = useReactFlow();
 
   // Load initial workflow if provided
   useEffect(() => {
@@ -140,6 +154,9 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     };
   }, [nodes, edges, currentWorkflowId, autoSaveWorkflow]);
 
+  /**
+   * Add execution log entry
+   */
   const addExecutionLog = (message: string, type: LogEntry['type'] = 'info', nodeId?: string, nodeName?: string) => {
     const newLog: LogEntry = {
       id: `${Date.now()}-${Math.random()}`,
@@ -472,6 +489,9 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     });
   };
 
+  /**
+   * Transform nodes for metrics display
+   */
   const transformedNodes = nodes.map(node => ({
     id: node.id,
     data: {
@@ -482,6 +502,7 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
 
   return (
     <div className="flex h-screen bg-background text-foreground">
+      {/* Sidebar with node palette */}
       <Sidebar 
         isOpen={sidebarOpen} 
         onToggle={() => setSidebarOpen(!sidebarOpen)}
@@ -489,76 +510,27 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
       />
       
       <div className="flex-1 flex flex-col">
+        {/* Header with toolbar */}
         <WorkflowHeader>
-          <div className="flex items-center gap-2">
-            <SettingsDialog />
-            <Button
-              onClick={() => setShowSaveDialog(true)}
-              variant="outline"
-              disabled={nodes.length === 0}
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Save
-            </Button>
-            <Button
-              onClick={() => setShowLoadDialog(true)}
-              variant="outline"
-            >
-              <FolderOpen className="w-4 h-4 mr-2" />
-              Load
-            </Button>
-            <Button
-              onClick={() => setShowLogsDialog(true)}
-              variant="outline"
-            >
-              <Logs className="w-4 h-4 mr-2" />
-              Logs
-            </Button>
-            <Button
-              onClick={() => setShowExecutionHistory(true)}
-              variant="outline"
-            >
-              History
-            </Button>
-            <Button
-              onClick={() => setShowPerformanceMetrics(true)}
-              variant="outline"
-            >
-              Metrics
-            </Button>
-            <Button
-              onClick={() => setShowDebugMode(true)}
-              variant="outline"
-            >
-              Debug
-            </Button>
-            <Button
-              onClick={executeWorkflow}
-              disabled={isExecuting}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Play className="w-4 h-4 mr-2" />
-              {isExecuting ? 'Executing...' : 'Run Workflow'}
-            </Button>
-            {isExecuting && (
-              <Button
-                onClick={stopWorkflow}
-                variant="destructive"
-                size="sm"
-              >
-                <Square className="w-4 h-4 mr-2" />
-                Stop
-              </Button>
-            )}
-          </div>
+          <SettingsDialog />
+          <WorkflowToolbar
+            isExecuting={isExecuting}
+            onExecute={executeWorkflow}
+            onStop={stopWorkflow}
+            onSave={() => setShowSaveDialog(true)}
+            onLoad={() => setShowLoadDialog(true)}
+            onShowLogs={() => setShowLogsDialog(true)}
+            onShowHistory={() => setShowExecutionHistory(true)}
+            onShowMetrics={() => setShowPerformanceMetrics(true)}
+            onShowDebug={() => setShowDebugMode(true)}
+            nodesCount={nodes.length}
+          />
         </WorkflowHeader>
 
+        {/* Main canvas area */}
         <div className="flex-1 relative">
-          <ReactFlow
-            nodes={nodes.map(node => ({
-              ...node,
-              className: node.id === highlightedNodeId ? 'node-highlighted' : undefined,
-            }))}
+          <WorkflowCanvas
+            nodes={nodes}
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
@@ -566,56 +538,10 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
             onNodeClick={onNodeClick}
             onDragOver={onDragOver}
             onDrop={onDrop}
-            nodeTypes={nodeTypes}
-            className="workflow-canvas"
-            fitView
-            selectionMode={SelectionMode.Partial}
-            multiSelectionKeyCode={null}
-            selectionKeyCode={null}
-            panOnDrag={true}
-            selectNodesOnDrag={false}
-          >
-            <Background 
-              variant={BackgroundVariant.Dots} 
-              gap={20} 
-              size={1}
-              color="rgba(139, 92, 246, 0.3)"
-            />
-            <Controls 
-              className="!bg-gray-800/90 !border-gray-600/50 !backdrop-blur-sm !shadow-lg !rounded-lg [&_button]:!bg-gray-700/80 [&_button]:!border-gray-600/50 [&_button]:!text-gray-200 [&_button:hover]:!bg-gray-600/80"
-              showZoom={true}
-              showFitView={true}
-              showInteractive={true}
-              position="bottom-left"
-            />
-            <MiniMap 
-              className="!bg-card/90 !border-border !backdrop-blur-sm !shadow-lg !rounded-lg"
-              nodeColor={(node) => {
-                switch (node.type) {
-                  case 'customCode':
-                    return '#8b5cf6';
-                  case 'workflowNode':
-                    const nodeData = node.data as any;
-                    switch (nodeData?.type) {
-                      case 'input':
-                        return '#ef4444';
-                      case 'output':
-                        return '#10b981';
-                      case 'trigger':
-                        return '#06b6d4';
-                      default:
-                        return '#6366f1';
-                    }
-                  default:
-                    return '#6366f1';
-                }
-              }}
-              maskColor="rgba(0, 0, 0, 0.8)"
-              pannable
-              zoomable
-            />
-          </ReactFlow>
+            highlightedNodeId={highlightedNodeId}
+          />
 
+          {/* Node configuration panel */}
           {selectedNode && (
             <NodeConfigPanel
               node={selectedNode}
@@ -633,6 +559,7 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
         </div>
       </div>
 
+      {/* Dialog components */}
       <SaveWorkflowDialog
         open={showSaveDialog}
         onOpenChange={setShowSaveDialog}
@@ -679,6 +606,11 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
   );
 };
 
+/**
+ * WorkflowBuilder Component
+ * 
+ * Main wrapper component that provides ReactFlow context.
+ */
 export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
   return (
     <ReactFlowProvider>
