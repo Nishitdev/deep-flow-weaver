@@ -11,6 +11,7 @@ import {
   Background,
   MiniMap,
   BackgroundVariant,
+  useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { WorkflowNode } from './WorkflowNode';
@@ -68,6 +69,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
   const [executionLogs, setExecutionLogs] = useState<LogEntry[]>([]);
   const { updateWorkflow } = useWorkflows();
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { screenToFlowPosition } = useReactFlow();
 
   // Load initial workflow if provided
   useEffect(() => {
@@ -174,11 +176,11 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     });
   }, [setNodes, setEdges, selectedNode]);
 
-  const addNode = useCallback((nodeData: Partial<WorkflowNodeData>) => {
+  const addNode = useCallback((nodeData: Partial<WorkflowNodeData>, position?: { x: number; y: number }) => {
     const newNode: Node = {
       id: `${Date.now()}`,
       type: 'workflowNode',
-      position: { x: Math.random() * 400 + 300, y: Math.random() * 300 + 200 },
+      position: position || { x: Math.random() * 400 + 300, y: Math.random() * 300 + 200 },
       data: {
         type: nodeData.type || 'default',
         label: nodeData.label || 'New Node',
@@ -190,6 +192,30 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     };
     setNodes((nds) => [...nds, newNode]);
   }, [setNodes, deleteNode]);
+
+  // Handle drag and drop
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const onDrop = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+
+    const nodeData = event.dataTransfer.getData('application/reactflow');
+    
+    if (!nodeData) {
+      return;
+    }
+
+    const parsedNodeData = JSON.parse(nodeData) as Partial<WorkflowNodeData>;
+    const position = screenToFlowPosition({
+      x: event.clientX,
+      y: event.clientY,
+    });
+
+    addNode(parsedNodeData, position);
+  }, [screenToFlowPosition, addNode]);
 
   // Update existing nodes to include the delete function
   useEffect(() => {
@@ -447,6 +473,8 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onNodeClick={onNodeClick}
+            onDragOver={onDragOver}
+            onDrop={onDrop}
             nodeTypes={nodeTypes}
             className="workflow-canvas"
             fitView

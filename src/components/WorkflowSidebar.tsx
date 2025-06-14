@@ -127,6 +127,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, onAddNode })
             <ChevronLeft className="w-4 h-4" />
           </Button>
         </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          Drag nodes to the canvas or click the + button
+        </p>
       </div>
 
       <ScrollArea className="flex-1 p-4">
@@ -172,8 +175,17 @@ const iconMap = {
 const NodeCard: React.FC<NodeCardProps> = ({ node, onAdd }) => {
   const IconComponent = iconMap[node.icon as keyof typeof iconMap] || Play;
 
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('application/reactflow', JSON.stringify(node));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
   return (
-    <div className="group p-3 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer">
+    <div 
+      className="group p-3 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer"
+      draggable
+      onDragStart={handleDragStart}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 flex-1">
           <div className="w-8 h-8 rounded-md bg-primary/20 flex items-center justify-center">
