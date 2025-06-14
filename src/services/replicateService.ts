@@ -20,6 +20,8 @@ export class ReplicateService {
       throw new Error('Replicate API key is required');
     }
 
+    console.log('Starting image generation with prompt:', prompt);
+
     try {
       const response = await fetch('https://api.replicate.com/v1/predictions', {
         method: 'POST',
@@ -42,12 +44,16 @@ export class ReplicateService {
         })
       });
 
+      console.log('Replicate API response status:', response.status);
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to generate image');
+        console.error('Replicate API error:', errorData);
+        throw new Error(errorData.detail || `API request failed with status ${response.status}`);
       }
 
       const prediction = await response.json();
+      console.log('Prediction created:', prediction);
       
       // Poll for completion
       return await this.pollForCompletion(prediction.id);
@@ -61,6 +67,8 @@ export class ReplicateService {
     const maxAttempts = 60; // 5 minutes with 5-second intervals
     let attempts = 0;
 
+    console.log('Starting to poll for prediction:', predictionId);
+
     while (attempts < maxAttempts) {
       try {
         const response = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
@@ -70,15 +78,20 @@ export class ReplicateService {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to check prediction status');
+          throw new Error(`Failed to check prediction status: ${response.status}`);
         }
 
         const prediction = await response.json();
+        console.log(`Poll attempt ${attempts + 1}, status:`, prediction.status);
 
         if (prediction.status === 'succeeded') {
+          console.log('Image generation completed:', prediction.output);
           return { output: prediction.output };
         } else if (prediction.status === 'failed') {
+          console.error('Image generation failed:', prediction.error);
           throw new Error(prediction.error || 'Image generation failed');
+        } else if (prediction.status === 'canceled') {
+          throw new Error('Image generation was canceled');
         }
 
         // Wait 5 seconds before next poll
@@ -90,6 +103,7 @@ export class ReplicateService {
       }
     }
 
+    console.error('Image generation timed out after', attempts, 'attempts');
     return { error: 'Image generation timed out' };
   }
 }

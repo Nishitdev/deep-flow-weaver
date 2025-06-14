@@ -263,6 +263,61 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
           </div>
         );
       
+      case 'imageOutput':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>Upload Type</Label>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  variant={config.uploadType === 'url' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setConfig({ ...config, uploadType: 'url', imageFile: null })}
+                >
+                  URL
+                </Button>
+                <Button
+                  variant={config.uploadType === 'file' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setConfig({ ...config, uploadType: 'file', imageUrl: '' })}
+                >
+                  Upload File
+                </Button>
+              </div>
+            </div>
+            
+            {config.uploadType === 'url' ? (
+              <div>
+                <Label htmlFor="displayImageUrl">Image URL</Label>
+                <Input
+                  id="displayImageUrl"
+                  placeholder="https://example.com/image.jpg"
+                  value={config.imageUrl || ''}
+                  onChange={(e) => setConfig({ ...config, imageUrl: e.target.value })}
+                />
+              </div>
+            ) : (
+              <div>
+                <Label htmlFor="displayImageFile">Upload Image File</Label>
+                <Input
+                  id="displayImageFile"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setConfig({ ...config, imageFile: file });
+                  }}
+                />
+                {config.imageFile && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Selected: {config.imageFile.name}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      
       default:
         return <p className="text-muted-foreground">No configuration options available.</p>;
     }

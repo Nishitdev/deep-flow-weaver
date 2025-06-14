@@ -14,6 +14,7 @@ export interface NodeConfig {
   language?: string;
   prompt?: string;
   generatedImageUrl?: string;
+  displayImageUrl?: string;
   [key: string]: any;
 }
 

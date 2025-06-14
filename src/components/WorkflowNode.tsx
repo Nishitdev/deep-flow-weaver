@@ -24,6 +24,7 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { SdxlNode } from './nodes/SdxlNode';
+import { ImageOutputNode } from './nodes/ImageOutputNode';
 
 const iconMap = {
   play: Play,
@@ -53,6 +54,8 @@ const getNodeStyles = (type: string) => {
     case 'sliderInput':
       return 'node-input bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 border-cyan-500/30';
     case 'sdxl':
+      return 'node-input bg-gradient-to-br from-purple-500/20 to-pink-600/20 border-purple-500/30';
+    case 'imageOutput':
       return 'node-input bg-gradient-to-br from-purple-500/20 to-pink-600/20 border-purple-500/30';
     default:
       return '';
@@ -143,6 +146,17 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
     if (nodeData.type === 'sdxl') {
       return (
         <SdxlNode 
+          data={{
+            config: nodeData.config || {},
+            onConfigUpdate: handleConfigUpdate,
+          }}
+        />
+      );
+    }
+
+    if (nodeData.type === 'imageOutput') {
+      return (
+        <ImageOutputNode 
           data={{
             config: nodeData.config || {},
             onConfigUpdate: handleConfigUpdate,
@@ -416,6 +430,7 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
       case 'toggleInput':
       case 'sliderInput':
       case 'sdxl':
+      case 'imageOutput':
         return 'min-w-[320px]';
       case 'output':
         return 'min-w-[250px]';

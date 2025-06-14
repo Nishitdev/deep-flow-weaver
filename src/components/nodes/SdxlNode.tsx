@@ -32,6 +32,10 @@ export const SdxlNode: React.FC<SdxlNodeProps> = ({ data }) => {
   const handleGenerate = async () => {
     const apiKey = localStorage.getItem('replicate_api_key');
     
+    console.log('Generate button clicked');
+    console.log('API key present:', !!apiKey);
+    console.log('Prompt:', prompt);
+    
     if (!apiKey) {
       toast({
         title: "API Key Required",
@@ -52,11 +56,22 @@ export const SdxlNode: React.FC<SdxlNodeProps> = ({ data }) => {
 
     setIsGenerating(true);
     
+    toast({
+      title: "Generation Started",
+      description: "Your image is being generated, this may take a few moments...",
+    });
+    
     try {
+      console.log('Creating Replicate service...');
       const replicateService = new ReplicateService(apiKey);
+      
+      console.log('Calling generateImage...');
       const result = await replicateService.generateImage(prompt);
       
+      console.log('Generation result:', result);
+      
       if (result.error) {
+        console.error('Generation error:', result.error);
         toast({
           title: "Generation Failed",
           description: result.error,
@@ -64,6 +79,7 @@ export const SdxlNode: React.FC<SdxlNodeProps> = ({ data }) => {
         });
       } else if (result.output && result.output.length > 0) {
         const imageUrl = result.output[0];
+        console.log('Generated image URL:', imageUrl);
         setGeneratedImageUrl(imageUrl);
         
         if (data.onConfigUpdate) {
@@ -83,7 +99,7 @@ export const SdxlNode: React.FC<SdxlNodeProps> = ({ data }) => {
       console.error('Generation error:', error);
       toast({
         title: "Generation Failed",
-        description: "An error occurred while generating the image.",
+        description: error instanceof Error ? error.message : "An error occurred while generating the image.",
         variant: "destructive",
       });
     } finally {

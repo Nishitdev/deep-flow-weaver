@@ -1,224 +1,202 @@
-
 import React from 'react';
-import { 
+import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import {
   Play, 
   FileInput,
+  FileOutput,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Code,
   Hash,
   Image,
   ToggleLeft,
-  Sliders
+  Sliders,
+  Upload
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { WorkflowNodeData } from '@/types/workflow';
 
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
-  onAddNode: (nodeData: Partial<WorkflowNodeData>) => void;
-}
-
-const nodeCategories = [
-  {
-    title: 'Essential Nodes',
-    nodes: [
-      {
-        type: 'trigger',
-        label: 'Manual Trigger',
-        icon: 'play',
-        description: 'Start workflow manually',
-        config: {},
-      },
-      {
-        type: 'input',
-        label: 'Text Input',
-        icon: 'fileInput',
-        description: 'A simple text input field',
-        config: { inputText: '' },
-      },
-      {
-        type: 'output',
-        label: 'Result',
-        icon: 'checkCircle',
-        description: 'Display output results',
-        config: { outputText: '' },
-      },
-    ],
-  },
-  {
-    title: 'Input Nodes',
-    nodes: [
-      {
-        type: 'numberInput',
-        label: 'Number Input',
-        icon: 'hash',
-        description: 'A numeric input field',
-        config: { inputValue: 0, min: 0, max: 100 },
-      },
-      {
-        type: 'imageInput',
-        label: 'Image Input',
-        icon: 'image',
-        description: 'Upload or provide a image',
-        config: { imageUrl: '', imageFile: null },
-      },
-      {
-        type: 'toggleInput',
-        label: 'Toggle Input',
-        icon: 'toggleLeft',
-        description: 'Toggle between true and false',
-        config: { toggleValue: false },
-      },
-      {
-        type: 'sliderInput',
-        label: 'Slider Input',
-        icon: 'sliders',
-        description: 'Select a value using a slider',
-        config: { sliderValue: 50, min: 0, max: 100 },
-      },
-    ],
-  },
-  {
-    title: 'AI Nodes',
-    nodes: [
-      {
-        type: 'sdxl',
-        label: 'SDXL Generator',
-        icon: 'image',
-        description: 'Generate images with Flux Schnell',
-        config: { prompt: '', generatedImageUrl: '' },
-      },
-    ],
-  },
-  {
-    title: 'Developer Nodes',
-    nodes: [
-      {
-        type: 'customCode',
-        label: 'Custom Code',
-        icon: 'code',
-        description: 'Execute JavaScript/Python code',
-        config: { code: '// Write your code here\nconsole.log("Hello World");', language: 'javascript' },
-      },
-    ],
-  },
-];
-
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, onAddNode }) => {
-  if (!isOpen) {
-    return (
-      <div className="w-12 bg-card border-r border-border flex flex-col items-center py-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggle}
-          className="w-8 h-8 p-0"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-80 bg-card border-r border-border">
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Workflow Nodes</h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggle}
-            className="w-8 h-8 p-0"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-        </div>
-        <p className="text-xs text-muted-foreground mt-2">
-          Drag nodes to the canvas or click the + button
-        </p>
-      </div>
-
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-6">
-          {nodeCategories.map((category) => (
-            <div key={category.title}>
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                {category.title}
-              </h3>
-              <div className="space-y-2">
-                {category.nodes.map((node, index) => (
-                  <NodeCard
-                    key={`${category.title}-${index}`}
-                    node={node}
-                    onAdd={() => onAddNode(node)}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
-    </div>
-  );
-};
-
-interface NodeCardProps {
-  node: Partial<WorkflowNodeData>;
-  onAdd: () => void;
+  onAddNode: (nodeData: any) => void;
 }
 
 const iconMap = {
   play: Play,
   fileInput: FileInput,
+  fileOutput: FileOutput,
   checkCircle: CheckCircle2,
-  code: Code,
   hash: Hash,
   image: Image,
   toggleLeft: ToggleLeft,
   sliders: Sliders,
+  upload: Upload,
 };
 
-const NodeCard: React.FC<NodeCardProps> = ({ node, onAdd }) => {
-  const IconComponent = iconMap[node.icon as keyof typeof iconMap] || Play;
+const nodeTemplates = [
+  {
+    type: 'trigger',
+    label: 'Trigger',
+    description: 'Starts the workflow manually',
+    icon: 'play',
+    config: {}
+  },
+  {
+    type: 'input',
+    label: 'Text Input',
+    description: 'Accepts text input',
+    icon: 'fileInput',
+    config: {
+      inputText: 'Hello World'
+    }
+  },
+  {
+    type: 'numberInput',
+    label: 'Number Input',
+    description: 'Accepts numeric input',
+    icon: 'hash',
+    config: {
+      inputValue: 0,
+      min: 0,
+      max: 100
+    }
+  },
+  {
+    type: 'imageInput',
+    label: 'Image Input',
+    description: 'Accepts image uploads or URLs',
+    icon: 'image',
+    config: {
+      imageUrl: '',
+      uploadType: 'url'
+    }
+  },
+  {
+    type: 'toggleInput',
+    label: 'Toggle Input',
+    description: 'A boolean toggle switch',
+    icon: 'toggleLeft',
+    config: {
+      toggleValue: false
+    }
+  },
+  {
+    type: 'sliderInput',
+    label: 'Slider Input',
+    description: 'A slider to select a value',
+    icon: 'sliders',
+    config: {
+      sliderValue: 50,
+      min: 0,
+      max: 100
+    }
+  },
+  {
+    type: 'output',
+    label: 'Output',
+    description: 'Displays output text',
+    icon: 'fileOutput',
+    config: {
+      outputText: 'Output will appear here...'
+    }
+  },
+  {
+    type: 'sdxl',
+    label: 'SDXL Image Generator',
+    description: 'Generates images using Flux Schnell',
+    icon: 'image',
+    config: {
+      prompt: 'A futuristic cityscape'
+    }
+  },
+  {
+    type: 'imageOutput',
+    label: 'Image Output',
+    description: 'Display images from other nodes',
+    icon: 'image',
+    config: {
+      imageUrl: '',
+      uploadType: 'url'
+    }
+  },
+];
 
-  const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData('application/reactflow', JSON.stringify(node));
-    e.dataTransfer.effectAllowed = 'move';
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, onAddNode }) => {
+  const handleAddNode = (nodeData: any) => {
+    onAddNode(nodeData);
+  };
+
+  const handleDragStart = (event: React.DragEvent, nodeType: string, nodeData: any) => {
+    event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
+    event.dataTransfer.effectAllowed = 'move';
   };
 
   return (
-    <div 
-      className="group p-3 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer"
-      draggable
-      onDragStart={handleDragStart}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 flex-1">
-          <div className="w-8 h-8 rounded-md bg-primary/20 flex items-center justify-center">
-            <IconComponent className="w-4 h-4 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-medium truncate">{node.label}</h4>
-            <p className="text-xs text-muted-foreground truncate">
-              {node.description}
-            </p>
-          </div>
-        </div>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={onAdd}
-          className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 p-0"
-        >
-          <Plus className="w-4 h-4" />
+    <aside className={`absolute top-0 left-0 h-full w-80 bg-card border-r border-border shadow-xl transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} z-50`}>
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <h2 className="text-lg font-semibold">Workflow Nodes</h2>
+        <Button variant="ghost" size="sm" onClick={onToggle}>
+          <X className="w-4 h-4" />
         </Button>
       </div>
-    </div>
+
+      <ScrollArea className="flex-1 p-4">
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Drag and drop these nodes onto the canvas to start building your workflow.
+          </p>
+
+          <Separator />
+
+          <Accordion type="single" collapsible>
+            {nodeTemplates.map((template) => (
+              <AccordionItem value={template.type} key={template.type}>
+                <AccordionTrigger className="data-[state=open]:text-foreground">{template.label}</AccordionTrigger>
+                <AccordionContent>
+                  <div 
+                    className="bg-secondary rounded-md p-3 mt-2 cursor-grab hover:bg-secondary/80 transition-colors duration-200"
+                    onDragStart={(event) => handleDragStart(event, template.type, {
+                      type: template.type,
+                      label: template.label,
+                      description: template.description,
+                      icon: template.icon,
+                      config: template.config,
+                    })}
+                    draggable
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                        {template.icon && iconMap[template.icon as keyof typeof iconMap] ? (
+                          <>{React.createElement(iconMap[template.icon as keyof typeof iconMap], { className: "w-4 h-4 text-primary" })}</>
+                        ) : (
+                          <Play className="w-4 h-4 text-primary" />
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm text-foreground truncate">
+                          {template.label}
+                        </h3>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {template.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </ScrollArea>
+    </aside>
   );
 };
