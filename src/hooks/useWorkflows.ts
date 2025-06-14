@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Node, Edge } from '@xyflow/react';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,6 +46,33 @@ export const useWorkflows = () => {
         description: "Failed to save workflow. Please try again.",
         variant: "destructive",
       });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateWorkflow = async (id: string, updates: Partial<Workflow>) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('workflows')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update local state
+      setWorkflows(prev => prev.map(w => w.id === id ? { ...w, ...updates, updated_at: data.updated_at } : w));
+
+      return data;
+    } catch (error) {
+      console.error('Error updating workflow:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -122,6 +148,7 @@ export const useWorkflows = () => {
     workflows,
     isLoading,
     saveWorkflow,
+    updateWorkflow,
     loadWorkflows,
     deleteWorkflow,
   };

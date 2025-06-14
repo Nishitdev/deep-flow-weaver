@@ -1,16 +1,19 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Play, Edit, Trash2, FolderOpen } from 'lucide-react';
+import { Plus, Play, Edit, Trash2, FolderOpen, Copy, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { useWorkflows, Workflow } from '@/hooks/useWorkflows';
 import { toast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { workflows, isLoading, loadWorkflows, deleteWorkflow } = useWorkflows();
+  const { workflows, isLoading, loadWorkflows, deleteWorkflow, updateWorkflow } = useWorkflows();
   const [loadingWorkflows, setLoadingWorkflows] = useState(true);
+  const [editingWorkflow, setEditingWorkflow] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
 
   useEffect(() => {
     const fetchWorkflows = async () => {
@@ -38,110 +41,230 @@ const Dashboard = () => {
     if (window.confirm(`Are you sure you want to delete "${workflowName}"?`)) {
       try {
         await deleteWorkflow(workflowId);
+        toast({
+          title: "Workflow Deleted",
+          description: `"${workflowName}" has been deleted successfully!`,
+        });
       } catch (error) {
         console.error('Failed to delete workflow:', error);
+        toast({
+          title: "Delete Failed",
+          description: "Failed to delete workflow. Please try again.",
+          variant: "destructive",
+        });
       }
+    }
+  };
+
+  const handleStartEdit = (workflow: Workflow) => {
+    setEditingWorkflow(workflow.id);
+    setEditName(workflow.name);
+  };
+
+  const handleSaveEdit = async (workflowId: string) => {
+    if (!editName.trim()) {
+      toast({
+        title: "Invalid Name",
+        description: "Workflow name cannot be empty.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await updateWorkflow(workflowId, { name: editName.trim() });
+      setEditingWorkflow(null);
+      setEditName('');
+      toast({
+        title: "Workflow Renamed",
+        description: "Workflow has been renamed successfully!",
+      });
+    } catch (error) {
+      console.error('Failed to rename workflow:', error);
+      toast({
+        title: "Rename Failed",
+        description: "Failed to rename workflow. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingWorkflow(null);
+    setEditName('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent, workflowId: string) => {
+    if (e.key === 'Enter') {
+      handleSaveEdit(workflowId);
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
+  };
+
+  const duplicateWorkflow = async (workflow: Workflow) => {
+    try {
+      const duplicatedName = `${workflow.name} (Copy)`;
+      // This would need to be implemented in useWorkflows hook
+      toast({
+        title: "Feature Coming Soon",
+        description: "Workflow duplication will be available soon.",
+      });
+    } catch (error) {
+      console.error('Failed to duplicate workflow:', error);
     }
   };
 
   if (loadingWorkflows) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading workflows...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading workflows...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-black text-white">
       <div className="container mx-auto px-6 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Workflow Dashboard</h1>
-            <p className="text-muted-foreground mt-2">
-              Create and manage your AI workflows
+            <h1 className="text-4xl font-bold mb-2">FLOWS</h1>
+            <p className="text-gray-400 text-sm">
+              /flōz/ • noun • visual sequences of connected AI operations
             </p>
           </div>
-          <Button onClick={handleCreateNew} className="bg-primary hover:bg-primary/90">
+          <Button 
+            onClick={handleCreateNew} 
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+          >
             <Plus className="w-4 h-4 mr-2" />
-            Create New Workflow
+            CREATE
           </Button>
         </div>
 
-        {/* Workflows Grid */}
-        {workflows.length === 0 ? (
-          <div className="text-center py-16">
-            <FolderOpen className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No workflows yet</h3>
-            <p className="text-muted-foreground mb-6">
-              Create your first workflow to get started with AI automation
-            </p>
-            <Button onClick={handleCreateNew} className="bg-primary hover:bg-primary/90">
-              <Plus className="w-4 h-4 mr-2" />
-              Create Your First Workflow
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {workflows.map((workflow) => (
-              <Card key={workflow.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="truncate">{workflow.name}</span>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleOpenWorkflow(workflow)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteWorkflow(workflow.id, workflow.name)}
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                        disabled={isLoading}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+        {/* My Flows Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4 text-gray-300">MY FLOWS</h2>
+          
+          {workflows.length === 0 ? (
+            <div className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center">
+              <div className="w-24 h-24 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Plus className="w-8 h-8 text-gray-500" />
+              </div>
+              <h3 className="text-lg font-medium mb-2 text-gray-300">CREATE NEW FLOW</h3>
+              <p className="text-gray-500 mb-4 text-sm">Open Composer and start building</p>
+              <Button 
+                onClick={handleCreateNew}
+                variant="outline"
+                className="border-gray-600 text-gray-300 hover:bg-gray-800"
+              >
+                Create Flow
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {workflows.map((workflow) => (
+                <Card key={workflow.id} className="bg-gray-900 border-gray-700 hover:border-gray-600 transition-colors group">
+                  <CardHeader className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Play className="w-4 h-4 text-gray-400" />
+                        <span className="text-xs text-gray-500">{workflow.nodes.length}</span>
+                        <span className="text-xs text-gray-600">•</span>
+                        <span className="text-xs text-gray-500">{workflow.edges.length} nodes</span>
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => duplicateWorkflow(workflow)}
+                          className="h-6 w-6 p-0 text-gray-400 hover:text-white"
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleStartEdit(workflow)}
+                          className="h-6 w-6 p-0 text-gray-400 hover:text-white"
+                          disabled={editingWorkflow === workflow.id}
+                        >
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteWorkflow(workflow.id, workflow.name)}
+                          className="h-6 w-6 p-0 text-gray-400 hover:text-red-400"
+                          disabled={isLoading}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
-                  </CardTitle>
-                  {workflow.description && (
-                    <CardDescription className="line-clamp-2">
-                      {workflow.description}
-                    </CardDescription>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                    <span>{workflow.nodes.length} nodes</span>
-                    <span>{workflow.edges.length} connections</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">
-                      Updated {new Date(workflow.updated_at).toLocaleDateString()}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleOpenWorkflow(workflow)}
-                      className="h-8"
-                    >
-                      <Play className="w-3 h-3 mr-1" />
-                      Open
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    
+                    {editingWorkflow === workflow.id ? (
+                      <Input
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        onKeyDown={(e) => handleKeyPress(e, workflow.id)}
+                        onBlur={() => handleSaveEdit(workflow.id)}
+                        autoFocus
+                        className="bg-gray-800 border-gray-600 text-white text-sm"
+                      />
+                    ) : (
+                      <CardTitle 
+                        className="text-white text-sm font-medium cursor-pointer hover:text-gray-300"
+                        onClick={() => handleOpenWorkflow(workflow)}
+                      >
+                        {workflow.name}
+                      </CardTitle>
+                    )}
+                    
+                    {workflow.description && (
+                      <CardDescription className="text-xs text-gray-500 line-clamp-2">
+                        {workflow.description}
+                      </CardDescription>
+                    )}
+                  </CardHeader>
+                  
+                  <CardContent className="p-4 pt-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {/* Workflow type badges - you can customize these based on workflow content */}
+                        <span className="px-2 py-1 bg-blue-600 text-xs rounded text-white">TEXT</span>
+                        <span className="px-2 py-1 bg-purple-600 text-xs rounded text-white">IMAGE</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-blue-400 hover:text-blue-300 text-xs h-6"
+                        >
+                          <FolderOpen className="w-3 h-3 mr-1" />
+                          FORK
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Public Flows Section - Placeholder */}
+        <div>
+          <h2 className="text-xl font-semibold mb-4 text-gray-300">PUBLIC FLOWS</h2>
+          <div className="text-center py-8 text-gray-500">
+            <p>Public flows will be available soon...</p>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
