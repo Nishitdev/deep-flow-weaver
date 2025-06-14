@@ -22,6 +22,13 @@ export const FluxSchnellNode: React.FC<FluxSchnellNodeProps> = ({ data }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState(data.config?.generatedImageUrl || '');
 
+  // Update local state when data changes (e.g., from workflow execution)
+  React.useEffect(() => {
+    if (data.config?.generatedImageUrl && data.config.generatedImageUrl !== generatedImageUrl) {
+      setGeneratedImageUrl(data.config.generatedImageUrl);
+    }
+  }, [data.config?.generatedImageUrl]);
+
   const handlePromptChange = (value: string) => {
     setPrompt(value);
     if (data.onConfigUpdate) {

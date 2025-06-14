@@ -9,6 +9,7 @@ interface ImageOutputNodeProps {
       imageUrl?: string;
       imageFile?: File | null;
       uploadType?: 'url' | 'file';
+      displayImageUrl?: string;
     };
     onConfigUpdate: (config: any) => void;
   };
@@ -16,7 +17,23 @@ interface ImageOutputNodeProps {
 
 export const ImageOutputNode: React.FC<ImageOutputNodeProps> = ({ data }) => {
   const { config } = data;
-  const previewUrl = config.uploadType === 'url' ? config.imageUrl : (config.imageFile ? URL.createObjectURL(config.imageFile) : '');
+  
+  // Priority: displayImageUrl (from workflow) > imageUrl (manual input) > imageFile
+  const previewUrl = config.displayImageUrl || 
+                     (config.uploadType === 'url' ? config.imageUrl : 
+                      (config.imageFile ? URL.createObjectURL(config.imageFile) : ''));
+
+  // Update local state when displayImageUrl changes (e.g., from workflow execution)
+  React.useEffect(() => {
+    if (config.imageUrl && config.uploadType === 'url' && !config.displayImageUrl) {
+      if (data.onConfigUpdate) {
+        data.onConfigUpdate({ 
+          ...config, 
+          displayImageUrl: config.imageUrl 
+        });
+      }
+    }
+  }, [config.imageUrl, config.uploadType, config.displayImageUrl, data.onConfigUpdate]);
 
   return (
     <div className="w-full space-y-3">

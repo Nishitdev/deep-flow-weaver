@@ -33,6 +33,7 @@ import { PerformanceMetrics } from './PerformanceMetrics';
 import { DebugMode } from './DebugMode';
 import { CustomCodeNode } from './CustomCodeNode';
 import { SettingsDialog } from './SettingsDialog';
+import { ReplicateService } from '@/services/replicateService';
 
 const nodeTypes = {
   workflowNode: WorkflowNode,
@@ -312,84 +313,23 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     const startTime = Date.now();
 
     try {
-      for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
-        const nodeData = node.data as WorkflowNodeData;
-        const nodeName = nodeData.label || `Node ${i + 1}`;
-        
-        addExecutionLog(`Starting execution of node: ${nodeName}`, "info", node.id, nodeName);
-        
-        setNodes((nds) =>
-          nds.map((n) =>
-            n.id === node.id
-              ? { ...n, className: 'node-executing' }
-              : { ...n, className: '' }
-          )
-        );
+      // Create a map to store node execution results
+      const nodeResults = new Map<string, any>();
+      
+      // Find all trigger nodes (nodes with no incoming edges)
+      const triggerNodes = nodes.filter(node => 
+        !edges.some(edge => edge.target === node.id)
+      );
 
-        const executionTime = 1000 + Math.random() * 1000;
-        addExecutionLog(`Processing ${nodeData.type} node...`, "info", node.id, nodeName);
-        
-        await new Promise(resolve => setTimeout(resolve, executionTime));
-
-        if (nodeData.type === 'input') {
-          const inputText = nodeData.config?.inputText || 'Default input';
-          addExecutionLog(`Input received: "${inputText}"`, "success", node.id, nodeName);
-        } else if (nodeData.type === 'output') {
-          const inputNodes = nodes.filter(n => {
-            const data = n.data as WorkflowNodeData;
-            return data.type === 'input';
-          });
-          
-          if (inputNodes.length > 0) {
-            const inputNodeData = inputNodes[0].data as WorkflowNodeData;
-            const inputText = inputNodeData.config?.inputText || 'Hello World';
-            
-            setNodes((nds) =>
-              nds.map((n) =>
-                n.id === node.id
-                  ? { 
-                      ...n, 
-                      data: { 
-                        ...nodeData, 
-                        config: { 
-                          ...nodeData.config, 
-                          outputText: inputText 
-                        } 
-                      },
-                      className: ''
-                    }
-                  : n.className === 'node-executing' ? { ...n, className: '' } : n
-              )
-            );
-            
-            addExecutionLog(`Output generated: "${inputText}"`, "success", node.id, nodeName);
-          } else {
-            addExecutionLog("No input data available for output node", "warning", node.id, nodeName);
-          }
-        } else if (nodeData.type === 'trigger') {
-          addExecutionLog("Trigger activated successfully", "success", node.id, nodeName);
-        } else if (nodeData.type === 'customCode') {
-          const code = nodeData.config?.code || '';
-          const language = nodeData.config?.language || 'javascript';
-          addExecutionLog(`Executing ${language} code...`, "info", node.id, nodeName);
-          
-          if (code.includes('console.log')) {
-            addExecutionLog("Code executed with console output", "success", node.id, nodeName);
-          } else {
-            addExecutionLog("Code executed successfully", "success", node.id, nodeName);
-          }
+      if (triggerNodes.length === 0) {
+        addExecutionLog("No trigger nodes found. Executing all nodes in order.", "warning");
+        // Fallback to executing all nodes
+        await executeNodesInOrder(nodes, nodeResults);
+      } else {
+        // Execute workflow starting from trigger nodes
+        for (const triggerNode of triggerNodes) {
+          await executeNodeAndDependents(triggerNode, nodeResults);
         }
-
-        addExecutionLog(`Node "${nodeName}" completed successfully`, "success", node.id, nodeName);
-        
-        setNodes((nds) =>
-          nds.map((n) =>
-            n.id === node.id
-              ? { ...n, className: '' }
-              : n
-          )
-        );
       }
 
       const totalTime = Date.now() - startTime;
@@ -410,6 +350,151 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     } finally {
       setIsExecuting(false);
       setNodes((nds) => nds.map((node) => ({ ...node, className: '' })));
+    }
+  };
+
+  const executeNodeAndDependents = async (node: Node, nodeResults: Map<string, any>): Promise<any> => {
+    const nodeData = node.data as WorkflowNodeData;
+    const nodeName = nodeData.label || `Node ${node.id}`;
+    
+    // Skip if already executed
+    if (nodeResults.has(node.id)) {
+      return nodeResults.get(node.id);
+    }
+
+    addExecutionLog(`Starting execution of node: ${nodeName}`, "info", node.id, nodeName);
+    
+    // Highlight the executing node
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === node.id
+          ? { ...n, className: 'node-executing' }
+          : n
+      )
+    );
+
+    try {
+      let result = null;
+
+      if (nodeData.type === 'fluxSchnell') {
+        const apiKey = localStorage.getItem('replicate_api_key');
+        
+        if (!apiKey) {
+          throw new Error('Replicate API key not found. Please set it in settings.');
+        }
+
+        const prompt = nodeData.config?.prompt || 'A beautiful landscape';
+        addExecutionLog(`Generating image with prompt: "${prompt}"`, "info", node.id, nodeName);
+        
+        const replicateService = new ReplicateService(apiKey);
+        const generationResult = await replicateService.generateImage(prompt);
+        
+        if (generationResult.error) {
+          throw new Error(generationResult.error);
+        }
+        
+        if (generationResult.output && generationResult.output.length > 0) {
+          const imageUrl = generationResult.output[0];
+          result = { imageUrl, type: 'image' };
+          
+          // Update the node's config with the generated image
+          setNodes((nds) =>
+            nds.map((n) =>
+              n.id === node.id
+                ? {
+                    ...n,
+                    data: {
+                      ...nodeData,
+                      config: {
+                        ...nodeData.config,
+                        generatedImageUrl: imageUrl
+                      }
+                    },
+                    className: ''
+                  }
+                : n
+            )
+          );
+          
+          addExecutionLog(`Image generated successfully: ${imageUrl}`, "success", node.id, nodeName);
+        }
+      } else if (nodeData.type === 'input') {
+        const inputText = nodeData.config?.inputText || 'Default input';
+        result = { text: inputText, type: 'text' };
+        addExecutionLog(`Input received: "${inputText}"`, "success", node.id, nodeName);
+      } else if (nodeData.type === 'imageOutput') {
+        // Find connected input nodes
+        const connectedEdges = edges.filter(edge => edge.target === node.id);
+        
+        if (connectedEdges.length > 0) {
+          for (const edge of connectedEdges) {
+            const sourceResult = nodeResults.get(edge.source);
+            if (sourceResult && sourceResult.type === 'image') {
+              // Update the image output node with the received image
+              setNodes((nds) =>
+                nds.map((n) =>
+                  n.id === node.id
+                    ? {
+                        ...n,
+                        data: {
+                          ...nodeData,
+                          config: {
+                            ...nodeData.config,
+                            imageUrl: sourceResult.imageUrl,
+                            uploadType: 'url'
+                          }
+                        },
+                        className: ''
+                      }
+                    : n
+                )
+              );
+              
+              addExecutionLog(`Image displayed in output node: ${sourceResult.imageUrl}`, "success", node.id, nodeName);
+              break;
+            }
+          }
+        } else {
+          addExecutionLog("No image data received for output node", "warning", node.id, nodeName);
+        }
+      } else {
+        // Default execution for other node types
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        addExecutionLog(`Node "${nodeName}" executed`, "success", node.id, nodeName);
+      }
+
+      // Store the result
+      nodeResults.set(node.id, result);
+
+      // Execute dependent nodes
+      const dependentEdges = edges.filter(edge => edge.source === node.id);
+      for (const edge of dependentEdges) {
+        const dependentNode = nodes.find(n => n.id === edge.target);
+        if (dependentNode) {
+          await executeNodeAndDependents(dependentNode, nodeResults);
+        }
+      }
+
+      return result;
+    } catch (error) {
+      addExecutionLog(`Node execution failed: ${error}`, "error", node.id, nodeName);
+      throw error;
+    } finally {
+      // Remove highlight from the node
+      setNodes((nds) =>
+        nds.map((n) =>
+          n.id === node.id
+            ? { ...n, className: '' }
+            : n
+        )
+      );
+    }
+  };
+
+  const executeNodesInOrder = async (nodesToExecute: Node[], nodeResults: Map<string, any>) => {
+    for (let i = 0; i < nodesToExecute.length; i++) {
+      const node = nodesToExecute[i];
+      await executeNodeAndDependents(node, nodeResults);
     }
   };
 
