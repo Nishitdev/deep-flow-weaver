@@ -81,6 +81,7 @@ export const WorkflowBuilder: React.FC = () => {
     // Simulate workflow execution with proper data flow
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
+      const nodeData = node.data as WorkflowNodeData;
       
       // Add executing class
       setNodes((nds) =>
@@ -94,19 +95,23 @@ export const WorkflowBuilder: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       // For output nodes, simulate receiving data from input nodes
-      if (node.data.type === 'output') {
-        const inputNodes = nodes.filter(n => n.data.type === 'input');
+      if (nodeData.type === 'output') {
+        const inputNodes = nodes.filter(n => {
+          const data = n.data as WorkflowNodeData;
+          return data.type === 'input';
+        });
         if (inputNodes.length > 0) {
-          const inputText = inputNodes[0].data.config?.inputText || 'Hello World';
+          const inputNodeData = inputNodes[0].data as WorkflowNodeData;
+          const inputText = inputNodeData.config?.inputText || 'Hello World';
           setNodes((nds) =>
             nds.map((n) =>
               n.id === node.id
                 ? { 
                     ...n, 
                     data: { 
-                      ...n.data, 
+                      ...nodeData, 
                       config: { 
-                        ...n.data.config, 
+                        ...nodeData.config, 
                         outputText: inputText 
                       } 
                     },
