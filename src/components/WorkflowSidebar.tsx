@@ -3,14 +3,13 @@ import React from 'react';
 import { 
   Play, 
   FileInput,
-  FileOutput,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { WorkflowNodeData } from '@/types/workflow';
 
 interface SidebarProps {
@@ -34,15 +33,15 @@ const nodeCategories = [
         type: 'input',
         label: 'Text Input',
         icon: 'fileInput',
-        description: 'Input text data',
-        config: {},
+        description: 'A simple text input field',
+        config: { inputText: '' },
       },
       {
         type: 'output',
-        label: 'Text Output',
-        icon: 'fileOutput',
-        description: 'Output text result',
-        config: {},
+        label: 'Result',
+        icon: 'checkCircle',
+        description: 'Display output results',
+        config: { outputText: '' },
       },
     ],
   },
@@ -112,7 +111,7 @@ interface NodeCardProps {
 const iconMap = {
   play: Play,
   fileInput: FileInput,
-  fileOutput: FileOutput,
+  checkCircle: CheckCircle2,
 };
 
 const NodeCard: React.FC<NodeCardProps> = ({ node, onAdd }) => {

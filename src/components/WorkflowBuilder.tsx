@@ -27,21 +27,7 @@ const nodeTypes = {
   workflowNode: WorkflowNode,
 };
 
-const initialNodes: Node[] = [
-  {
-    id: '1',
-    type: 'workflowNode',
-    position: { x: 100, y: 100 },
-    data: {
-      type: 'trigger',
-      label: 'Manual Trigger',
-      icon: 'play',
-      description: 'Start workflow manually',
-      config: {},
-    },
-  },
-];
-
+const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
 
 export const WorkflowBuilder: React.FC = () => {
@@ -62,9 +48,9 @@ export const WorkflowBuilder: React.FC = () => {
 
   const addNode = useCallback((nodeData: Partial<WorkflowNodeData>) => {
     const newNode: Node = {
-      id: `${nodes.length + 1}`,
+      id: `${Date.now()}`,
       type: 'workflowNode',
-      position: { x: Math.random() * 400 + 200, y: Math.random() * 400 + 200 },
+      position: { x: Math.random() * 400 + 300, y: Math.random() * 300 + 200 },
       data: {
         type: nodeData.type || 'default',
         label: nodeData.label || 'New Node',
@@ -74,38 +60,72 @@ export const WorkflowBuilder: React.FC = () => {
       },
     };
     setNodes((nds) => [...nds, newNode]);
-  }, [nodes.length, setNodes]);
+  }, [setNodes]);
 
   const executeWorkflow = async () => {
+    if (nodes.length === 0) {
+      toast({
+        title: "No Nodes Found",
+        description: "Please add some nodes to execute the workflow.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsExecuting(true);
     toast({
       title: "Workflow Execution Started",
       description: "Your workflow is now running...",
     });
 
-    // Simulate workflow execution
+    // Simulate workflow execution with proper data flow
     for (let i = 0; i < nodes.length; i++) {
-      const nodeId = nodes[i].id;
+      const node = nodes[i];
       
       // Add executing class
       setNodes((nds) =>
-        nds.map((node) =>
-          node.id === nodeId
-            ? { ...node, className: 'node-executing' }
-            : { ...node, className: '' }
+        nds.map((n) =>
+          n.id === node.id
+            ? { ...n, className: 'node-executing' }
+            : { ...n, className: '' }
         )
       );
 
       await new Promise(resolve => setTimeout(resolve, 1500));
 
-      // Remove executing class
-      setNodes((nds) =>
-        nds.map((node) =>
-          node.id === nodeId
-            ? { ...node, className: '' }
-            : node
-        )
-      );
+      // For output nodes, simulate receiving data from input nodes
+      if (node.data.type === 'output') {
+        const inputNodes = nodes.filter(n => n.data.type === 'input');
+        if (inputNodes.length > 0) {
+          const inputText = inputNodes[0].data.config?.inputText || 'Hello World';
+          setNodes((nds) =>
+            nds.map((n) =>
+              n.id === node.id
+                ? { 
+                    ...n, 
+                    data: { 
+                      ...n.data, 
+                      config: { 
+                        ...n.data.config, 
+                        outputText: inputText 
+                      } 
+                    },
+                    className: ''
+                  }
+                : n.className === 'node-executing' ? { ...n, className: '' } : n
+            )
+          );
+        }
+      } else {
+        // Remove executing class
+        setNodes((nds) =>
+          nds.map((n) =>
+            n.id === node.id
+              ? { ...n, className: '' }
+              : n
+          )
+        );
+      }
     }
 
     setIsExecuting(false);

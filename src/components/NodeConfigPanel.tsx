@@ -45,10 +45,10 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="inputText">Input Text</Label>
+              <Label htmlFor="inputText">Default Input Text</Label>
               <Textarea
                 id="inputText"
-                placeholder="Enter your input text..."
+                placeholder="Enter default text..."
                 value={config.inputText || ''}
                 onChange={(e) => setConfig({ ...config, inputText: e.target.value })}
                 rows={4}
@@ -61,14 +61,13 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="outputText">Output Text</Label>
+              <Label htmlFor="outputText">Output Display Text</Label>
               <Textarea
                 id="outputText"
-                placeholder="Output will appear here..."
+                placeholder="Configure what to display..."
                 value={config.outputText || ''}
                 onChange={(e) => setConfig({ ...config, outputText: e.target.value })}
                 rows={4}
-                readOnly
               />
             </div>
           </div>
