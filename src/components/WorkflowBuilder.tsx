@@ -654,9 +654,9 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
               className: node.id === highlightedNodeId ? 'node-highlighted' : undefined,
             }))}
             edges={edges}
-            onNodesChange={onNodesChangePersist} {/* Save nodes to backend */}
-            onEdgesChange={onEdgesChangePersist} {/* Save edges to backend */}
-            onConnect={onConnect} {/* Save on connect */}
+            onNodesChange={onNodesChangePersist}
+            onEdgesChange={onEdgesChangePersist}
+            onConnect={onConnect}
             onNodeClick={onNodeClick}
             onDragOver={onDragOver}
             onDrop={onDrop}
