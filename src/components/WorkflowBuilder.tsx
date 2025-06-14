@@ -340,6 +340,32 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     });
   }, [setNodes, setEdges, deleteNode]);
 
+  /**
+   * Get input data for a node from its connected inputs
+   */
+  const getNodeInputData = (nodeId: string, nodeResults: Map<string, any>): any => {
+    const incomingEdges = edges.filter(edge => edge.target === nodeId);
+    
+    if (incomingEdges.length === 0) {
+      return null;
+    }
+
+    // For nodes with single input, return the direct result
+    if (incomingEdges.length === 1) {
+      const sourceResult = nodeResults.get(incomingEdges[0].source);
+      return sourceResult;
+    }
+
+    // For nodes with multiple inputs, return an object with all inputs
+    const inputs: Record<string, any> = {};
+    incomingEdges.forEach((edge, index) => {
+      const sourceResult = nodeResults.get(edge.source);
+      inputs[`input_${index}`] = sourceResult;
+    });
+
+    return inputs;
+  };
+
   const executeWorkflow = async () => {
     if (nodes.length === 0) {
       toast({
@@ -366,6 +392,7 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     try {
       const nodeResults = new Map<string, any>();
       
+      // Find trigger nodes (nodes with no incoming edges)
       const triggerNodes = nodes.filter(node => 
         !edges.some(edge => edge.target === node.id)
       );
@@ -421,8 +448,23 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     try {
       let result = null;
 
+      // Get input data from connected nodes
+      const inputData = getNodeInputData(node.id, nodeResults);
+
       if (nodeData.type === 'fluxSchnell') {
-        const prompt = nodeData.config?.prompt || 'A beautiful landscape';
+        // For Flux Schnell, use input from connected nodes or fallback to configured prompt
+        let prompt = nodeData.config?.prompt || 'A beautiful landscape';
+        
+        if (inputData && inputData.text) {
+          prompt = inputData.text;
+          addExecutionLog(`Using input from connected node: "${prompt}"`, "info", node.id, nodeName);
+        } else if (inputData && typeof inputData === 'string') {
+          prompt = inputData;
+          addExecutionLog(`Using input from connected node: "${prompt}"`, "info", node.id, nodeName);
+        } else {
+          addExecutionLog(`Using configured prompt: "${prompt}"`, "info", node.id, nodeName);
+        }
+        
         addExecutionLog(`Generating image with prompt: "${prompt}"`, "info", node.id, nodeName);
         
         const replicateService = new ReplicateService('');
@@ -434,7 +476,7 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
         
         if (generationResult.output && generationResult.output.length > 0) {
           const imageUrl = generationResult.output[0];
-          result = { imageUrl, type: 'image' };
+          result = { imageUrl, type: 'image', prompt };
           
           setNodes((nds) =>
             nds.map((n) =>
@@ -445,7 +487,8 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
                       ...nodeData,
                       config: {
                         ...nodeData.config,
-                        generatedImageUrl: imageUrl
+                        generatedImageUrl: imageUrl,
+                        prompt: prompt // Update the prompt that was actually used
                       }
                     },
                     className: ''
@@ -459,49 +502,44 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
       } else if (nodeData.type === 'input') {
         const inputText = nodeData.config?.inputText || 'Default input';
         result = { text: inputText, type: 'text' };
-        addExecutionLog(`Input received: "${inputText}"`, "success", node.id, nodeName);
+        addExecutionLog(`Input provided: "${inputText}"`, "success", node.id, nodeName);
       } else if (nodeData.type === 'imageOutput') {
-        const connectedEdges = edges.filter(edge => edge.target === node.id);
-        
-        if (connectedEdges.length > 0) {
-          for (const edge of connectedEdges) {
-            const sourceResult = nodeResults.get(edge.source);
-            if (sourceResult && sourceResult.type === 'image') {
-              setNodes((nds) =>
-                nds.map((n) =>
-                  n.id === node.id
-                    ? {
-                        ...n,
-                        data: {
-                          ...nodeData,
-                          config: {
-                            ...nodeData.config,
-                            displayImageUrl: sourceResult.imageUrl,
-                            imageUrl: sourceResult.imageUrl,
-                            uploadType: 'url'
-                          }
-                        },
-                        className: ''
+        if (inputData && inputData.type === 'image') {
+          setNodes((nds) =>
+            nds.map((n) =>
+              n.id === node.id
+                ? {
+                    ...n,
+                    data: {
+                      ...nodeData,
+                      config: {
+                        ...nodeData.config,
+                        displayImageUrl: inputData.imageUrl,
+                        imageUrl: inputData.imageUrl,
+                        uploadType: 'url'
                       }
-                    : n
-                )
-              );
-              
-              addExecutionLog(`Image displayed in output node: ${sourceResult.imageUrl}`, "success", node.id, nodeName);
-              result = sourceResult;
-              break;
-            }
-          }
+                    },
+                    className: ''
+                  }
+                : n
+            )
+          );
+          
+          addExecutionLog(`Image displayed in output node: ${inputData.imageUrl}`, "success", node.id, nodeName);
+          result = inputData;
         } else {
           addExecutionLog("No image data received for output node", "warning", node.id, nodeName);
         }
       } else {
+        // Default node processing
         await new Promise(resolve => setTimeout(resolve, 1000));
+        result = inputData || { type: 'default', data: 'processed' };
         addExecutionLog(`Node "${nodeName}" executed`, "success", node.id, nodeName);
       }
 
       nodeResults.set(node.id, result);
 
+      // Execute dependent nodes
       const dependentEdges = edges.filter(edge => edge.source === node.id);
       for (const edge of dependentEdges) {
         const dependentNode = nodes.find(n => n.id === edge.target);
