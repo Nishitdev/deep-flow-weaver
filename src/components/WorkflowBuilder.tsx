@@ -160,6 +160,21 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     setSelectedNode(node);
   }, []);
 
+  const deleteNode = useCallback((nodeId: string) => {
+    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+    
+    // Close config panel if the deleted node was selected
+    if (selectedNode?.id === nodeId) {
+      setSelectedNode(null);
+    }
+    
+    toast({
+      title: "Node Deleted",
+      description: "Node and its connections have been removed successfully.",
+    });
+  }, [setNodes, setEdges, selectedNode]);
+
   const addNode = useCallback((nodeData: Partial<WorkflowNodeData>) => {
     const newNode: Node = {
       id: `${Date.now()}`,
@@ -171,20 +186,40 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
         icon: nodeData.icon || 'play',
         description: nodeData.description || 'Description',
         config: nodeData.config || {},
+        onDelete: deleteNode,
       },
     };
     setNodes((nds) => [...nds, newNode]);
-  }, [setNodes]);
+  }, [setNodes, deleteNode]);
+
+  // Update existing nodes to include the delete function
+  useEffect(() => {
+    setNodes((nds) => 
+      nds.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          onDelete: deleteNode,
+        },
+      }))
+    );
+  }, [deleteNode, setNodes]);
 
   const loadWorkflow = useCallback((loadedNodes: Node[], loadedEdges: Edge[]) => {
-    setNodes(loadedNodes);
+    setNodes(loadedNodes.map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        onDelete: deleteNode,
+      },
+    })));
     setEdges(loadedEdges);
     clearExecutionLogs();
     toast({
       title: "Workflow Loaded",
       description: "Workflow has been loaded successfully!",
     });
-  }, [setNodes, setEdges]);
+  }, [setNodes, setEdges, deleteNode]);
 
   const executeWorkflow = async () => {
     if (nodes.length === 0) {

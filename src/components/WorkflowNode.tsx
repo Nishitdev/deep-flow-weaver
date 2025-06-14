@@ -10,6 +10,12 @@ import {
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
 
 const iconMap = {
   play: Play,
@@ -31,7 +37,11 @@ const getNodeStyles = (type: string) => {
   }
 };
 
-export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
+interface WorkflowNodeProps extends NodeProps {
+  onDelete?: (nodeId: string) => void;
+}
+
+export const WorkflowNode: React.FC<WorkflowNodeProps> = ({ data, selected, id, onDelete }) => {
   const nodeData = data as any;
   const [inputValue, setInputValue] = useState(nodeData.config?.inputText || '');
   const IconComponent = iconMap[nodeData.icon as keyof typeof iconMap] || Play;
@@ -41,6 +51,12 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
     // Update the node's config
     if (nodeData.config) {
       nodeData.config.inputText = value;
+    }
+  };
+
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(id);
     }
   };
 
@@ -121,27 +137,36 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
   };
 
   return (
-    <div className={cn(
-      'workflow-node p-4',
-      nodeData.type === 'input' ? 'min-w-[300px]' : nodeData.type === 'output' ? 'min-w-[250px]' : 'min-w-[200px]',
-      getNodeStyles(nodeData.type),
-      selected && 'selected'
-    )}>
-      {nodeData.type !== 'trigger' && (
-        <Handle
-          type="target"
-          position={Position.Left}
-          className="!w-3 !h-3 !border-2"
-        />
-      )}
-      
-      {renderNodeContent()}
+    <ContextMenu>
+      <ContextMenuTrigger>
+        <div className={cn(
+          'workflow-node p-4',
+          nodeData.type === 'input' ? 'min-w-[300px]' : nodeData.type === 'output' ? 'min-w-[250px]' : 'min-w-[200px]',
+          getNodeStyles(nodeData.type),
+          selected && 'selected'
+        )}>
+          {nodeData.type !== 'trigger' && (
+            <Handle
+              type="target"
+              position={Position.Left}
+              className="!w-3 !h-3 !border-2"
+            />
+          )}
+          
+          {renderNodeContent()}
 
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!w-3 !h-3 !border-2"
-      />
-    </div>
+          <Handle
+            type="source"
+            position={Position.Right}
+            className="!w-3 !h-3 !border-2"
+          />
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-48">
+        <ContextMenuItem onClick={handleDelete} className="text-red-600 focus:text-red-600">
+          Delete Node
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 };
