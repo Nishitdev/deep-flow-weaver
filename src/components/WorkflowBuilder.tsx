@@ -355,6 +355,15 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     });
   };
 
+  // Transform nodes for PerformanceMetrics component
+  const transformedNodes = nodes.map(node => ({
+    id: node.id,
+    data: {
+      label: (node.data as WorkflowNodeData).label || 'Unknown Node',
+      type: (node.data as WorkflowNodeData).type || 'default',
+    },
+  }));
+
   return (
     <div className="flex h-screen bg-background text-foreground">
       <Sidebar 
@@ -531,7 +540,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
         onOpenChange={setShowPerformanceMetrics}
         workflowId={initialWorkflow?.id}
         executionLogs={executionLogs}
-        nodes={nodes}
+        nodes={transformedNodes}
       />
 
       <DebugMode
