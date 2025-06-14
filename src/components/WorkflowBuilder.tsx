@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from 'react';
 import {
   ReactFlow,
@@ -18,7 +17,9 @@ import { WorkflowNode } from './WorkflowNode';
 import { Sidebar } from './WorkflowSidebar';
 import { WorkflowHeader } from './WorkflowHeader';
 import { NodeConfigPanel } from './NodeConfigPanel';
-import { Play, Square } from 'lucide-react';
+import { SaveWorkflowDialog } from './SaveWorkflowDialog';
+import { LoadWorkflowDialog } from './LoadWorkflowDialog';
+import { Play, Square, Save, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { WorkflowNodeData } from '@/types/workflow';
@@ -36,6 +37,8 @@ export const WorkflowBuilder: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showLoadDialog, setShowLoadDialog] = useState(false);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
@@ -61,6 +64,15 @@ export const WorkflowBuilder: React.FC = () => {
     };
     setNodes((nds) => [...nds, newNode]);
   }, [setNodes]);
+
+  const loadWorkflow = useCallback((loadedNodes: Node[], loadedEdges: Edge[]) => {
+    setNodes(loadedNodes);
+    setEdges(loadedEdges);
+    toast({
+      title: "Workflow Loaded",
+      description: "Workflow has been loaded successfully!",
+    });
+  }, [setNodes, setEdges]);
 
   const executeWorkflow = async () => {
     if (nodes.length === 0) {
@@ -161,6 +173,21 @@ export const WorkflowBuilder: React.FC = () => {
         <WorkflowHeader>
           <div className="flex items-center gap-2">
             <Button
+              onClick={() => setShowSaveDialog(true)}
+              variant="outline"
+              disabled={nodes.length === 0}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Save
+            </Button>
+            <Button
+              onClick={() => setShowLoadDialog(true)}
+              variant="outline"
+            >
+              <FolderOpen className="w-4 h-4 mr-2" />
+              Load
+            </Button>
+            <Button
               onClick={executeWorkflow}
               disabled={isExecuting}
               className="bg-green-600 hover:bg-green-700"
@@ -223,6 +250,19 @@ export const WorkflowBuilder: React.FC = () => {
           )}
         </div>
       </div>
+
+      <SaveWorkflowDialog
+        open={showSaveDialog}
+        onOpenChange={setShowSaveDialog}
+        nodes={nodes}
+        edges={edges}
+      />
+
+      <LoadWorkflowDialog
+        open={showLoadDialog}
+        onOpenChange={setShowLoadDialog}
+        onLoadWorkflow={loadWorkflow}
+      />
     </div>
   );
 };
