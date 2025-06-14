@@ -109,9 +109,9 @@ const nodeTemplates = [
     }
   },
   {
-    type: 'sdxl',
-    label: 'SDXL Image Generator',
-    description: 'Generates images using Flux Schnell',
+    type: 'fluxSchnell',
+    label: 'Flux Schnell',
+    description: 'Fast image generation using Flux Schnell',
     icon: 'image',
     config: {
       prompt: 'A futuristic cityscape'

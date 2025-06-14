@@ -318,6 +318,34 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
           </div>
         );
       
+      case 'fluxSchnell':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="fluxPrompt">Image Prompt</Label>
+              <Textarea
+                id="fluxPrompt"
+                placeholder="Describe the image you want to generate..."
+                value={config.prompt || ''}
+                onChange={(e) => setConfig({ ...config, prompt: e.target.value })}
+                rows={4}
+              />
+            </div>
+            {config.generatedImageUrl && (
+              <div>
+                <Label>Generated Image</Label>
+                <div className="mt-2 p-2 bg-background/30 border border-border/30 rounded-lg">
+                  <img 
+                    src={config.generatedImageUrl} 
+                    alt="Generated" 
+                    className="w-full h-auto max-h-32 object-contain rounded" 
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      
       default:
         return <p className="text-muted-foreground">No configuration options available.</p>;
     }

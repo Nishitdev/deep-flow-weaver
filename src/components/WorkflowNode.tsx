@@ -23,7 +23,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { SdxlNode } from './nodes/SdxlNode';
+import { FluxSchnellNode } from './nodes/FluxSchnellNode';
 import { ImageOutputNode } from './nodes/ImageOutputNode';
 
 const iconMap = {
@@ -53,7 +53,7 @@ const getNodeStyles = (type: string) => {
       return 'node-input bg-gradient-to-br from-purple-500/20 to-purple-600/20 border-purple-500/30';
     case 'sliderInput':
       return 'node-input bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 border-cyan-500/30';
-    case 'sdxl':
+    case 'fluxSchnell':
       return 'node-input bg-gradient-to-br from-purple-500/20 to-pink-600/20 border-purple-500/30';
     case 'imageOutput':
       return 'node-input bg-gradient-to-br from-purple-500/20 to-pink-600/20 border-purple-500/30';
@@ -143,9 +143,9 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
   };
 
   const renderNodeContent = () => {
-    if (nodeData.type === 'sdxl') {
+    if (nodeData.type === 'fluxSchnell') {
       return (
-        <SdxlNode 
+        <FluxSchnellNode 
           data={{
             config: nodeData.config || {},
             onConfigUpdate: handleConfigUpdate,
@@ -429,7 +429,7 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
       case 'imageInput':
       case 'toggleInput':
       case 'sliderInput':
-      case 'sdxl':
+      case 'fluxSchnell':
       case 'imageOutput':
         return 'min-w-[320px]';
       case 'output':
