@@ -12,6 +12,7 @@ import {
   MiniMap,
   BackgroundVariant,
   useReactFlow,
+  ReactFlowProvider,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { WorkflowNode } from './WorkflowNode';
@@ -52,7 +53,7 @@ interface WorkflowBuilderProps {
   initialWorkflow?: Workflow | null;
 }
 
-export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflow }) => {
+const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflow }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -580,5 +581,13 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
         executionLogs={executionLogs}
       />
     </div>
+  );
+};
+
+export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = (props) => {
+  return (
+    <ReactFlowProvider>
+      <WorkflowBuilderContent {...props} />
+    </ReactFlowProvider>
   );
 };
