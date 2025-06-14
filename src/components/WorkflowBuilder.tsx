@@ -449,7 +449,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
               color="rgba(139, 92, 246, 0.3)"
             />
             <Controls 
-              className="!bg-card/90 !border-border !backdrop-blur-sm !shadow-lg !rounded-lg"
+              className="!bg-gray-800/90 !border-gray-600/50 !backdrop-blur-sm !shadow-lg !rounded-lg [&_button]:!bg-gray-700/80 [&_button]:!border-gray-600/50 [&_button]:!text-gray-200 [&_button:hover]:!bg-gray-600/80"
               showZoom={true}
               showFitView={true}
               showInteractive={true}
