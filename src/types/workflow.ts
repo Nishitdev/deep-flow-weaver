@@ -11,7 +11,7 @@ export interface NodeConfig {
   [key: string]: any;
 }
 
-export interface WorkflowNodeData {
+export interface WorkflowNodeData extends Record<string, unknown> {
   type: string;
   label: string;
   description: string;
