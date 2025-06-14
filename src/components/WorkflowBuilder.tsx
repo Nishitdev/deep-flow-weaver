@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import {
   ReactFlow,
   Node,
@@ -24,7 +24,7 @@ import { Play, Square, Save, FolderOpen, Logs } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { WorkflowNodeData } from '@/types/workflow';
-import { Workflow } from '@/hooks/useWorkflows';
+import { Workflow, useWorkflows } from '@/hooks/useWorkflows';
 
 const nodeTypes = {
   workflowNode: WorkflowNode,
@@ -46,18 +46,75 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showLoadDialog, setShowLoadDialog] = useState(false);
   const [showLogsDialog, setShowLogsDialog] = useState(false);
+  const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
+  const { updateWorkflow } = useWorkflows();
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load initial workflow if provided
   useEffect(() => {
     if (initialWorkflow) {
       setNodes(initialWorkflow.nodes);
       setEdges(initialWorkflow.edges);
+      setCurrentWorkflowId(initialWorkflow.id);
       toast({
         title: "Workflow Loaded",
         description: `"${initialWorkflow.name}" has been loaded successfully!`,
       });
     }
   }, [initialWorkflow, setNodes, setEdges]);
+
+  // Auto-save workflow changes
+  const autoSaveWorkflow = useCallback(async (nodesToSave: Node[], edgesToSave: Edge[]) => {
+    if (!currentWorkflowId) return;
+
+    try {
+      await updateWorkflow(currentWorkflowId, {
+        nodes: nodesToSave,
+        edges: edgesToSave,
+      });
+      console.log('Workflow auto-saved successfully');
+    } catch (error) {
+      console.error('Failed to auto-save workflow:', error);
+    }
+  }, [currentWorkflowId, updateWorkflow]);
+
+  // Debounced auto-save when nodes change
+  useEffect(() => {
+    if (!currentWorkflowId || nodes.length === 0) return;
+
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      autoSaveWorkflow(nodes, edges);
+    }, 1000); // Auto-save after 1 second of inactivity
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [nodes, currentWorkflowId, autoSaveWorkflow, edges]);
+
+  // Debounced auto-save when edges change
+  useEffect(() => {
+    if (!currentWorkflowId || edges.length === 0) return;
+
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      autoSaveWorkflow(nodes, edges);
+    }, 1000); // Auto-save after 1 second of inactivity
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [edges, currentWorkflowId, autoSaveWorkflow, nodes]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
