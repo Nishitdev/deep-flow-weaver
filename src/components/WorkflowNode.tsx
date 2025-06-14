@@ -5,11 +5,19 @@ import {
   Play, 
   FileInput,
   FileOutput,
-  CheckCircle2
+  CheckCircle2,
+  Hash,
+  Image,
+  ToggleLeft,
+  Sliders,
+  Upload
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { Button } from '@/components/ui/button';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -22,6 +30,10 @@ const iconMap = {
   fileInput: FileInput,
   fileOutput: FileOutput,
   checkCircle: CheckCircle2,
+  hash: Hash,
+  image: Image,
+  toggleLeft: ToggleLeft,
+  sliders: Sliders,
 };
 
 const getNodeStyles = (type: string) => {
@@ -32,6 +44,14 @@ const getNodeStyles = (type: string) => {
       return 'node-input bg-gradient-to-br from-red-500/20 to-orange-600/20 border-red-500/30';
     case 'output':
       return 'node-output bg-gradient-to-br from-green-500/20 to-emerald-600/20 border-green-500/30';
+    case 'numberInput':
+      return 'node-input bg-gradient-to-br from-green-500/20 to-green-600/20 border-green-500/30';
+    case 'imageInput':
+      return 'node-input bg-gradient-to-br from-blue-500/20 to-blue-600/20 border-blue-500/30';
+    case 'toggleInput':
+      return 'node-input bg-gradient-to-br from-purple-500/20 to-purple-600/20 border-purple-500/30';
+    case 'sliderInput':
+      return 'node-input bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 border-cyan-500/30';
     default:
       return '';
   }
@@ -40,13 +60,45 @@ const getNodeStyles = (type: string) => {
 export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
   const nodeData = data as any;
   const [inputValue, setInputValue] = useState(nodeData.config?.inputText || '');
+  const [numberValue, setNumberValue] = useState(nodeData.config?.inputValue || 0);
+  const [imageUrl, setImageUrl] = useState(nodeData.config?.imageUrl || '');
+  const [toggleValue, setToggleValue] = useState(nodeData.config?.toggleValue || false);
+  const [sliderValue, setSliderValue] = useState([nodeData.config?.sliderValue || 50]);
+  
   const IconComponent = iconMap[nodeData.icon as keyof typeof iconMap] || Play;
   
   const handleInputChange = (value: string) => {
     setInputValue(value);
-    // Update the node's config
     if (nodeData.config) {
       nodeData.config.inputText = value;
+    }
+  };
+
+  const handleNumberChange = (value: number) => {
+    setNumberValue(value);
+    if (nodeData.config) {
+      nodeData.config.inputValue = value;
+    }
+  };
+
+  const handleImageUrlChange = (value: string) => {
+    setImageUrl(value);
+    if (nodeData.config) {
+      nodeData.config.imageUrl = value;
+    }
+  };
+
+  const handleToggleChange = (value: boolean) => {
+    setToggleValue(value);
+    if (nodeData.config) {
+      nodeData.config.toggleValue = value;
+    }
+  };
+
+  const handleSliderChange = (value: number[]) => {
+    setSliderValue(value);
+    if (nodeData.config) {
+      nodeData.config.sliderValue = value[0];
     }
   };
 
@@ -83,6 +135,151 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
               className="w-full min-h-[80px] bg-background/50 border-border/50 text-sm resize-none"
               rows={3}
             />
+          </div>
+        </div>
+      );
+    }
+
+    if (nodeData.type === 'numberInput') {
+      return (
+        <div className="w-full space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-green-500/30 flex items-center justify-center">
+              <Hash className="w-4 h-4 text-green-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-sm text-foreground">
+                {nodeData.label}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                A numeric input field
+              </p>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground">Number Input</label>
+            <Input
+              type="number"
+              value={numberValue}
+              onChange={(e) => handleNumberChange(Number(e.target.value))}
+              className="w-full bg-background/50 border-border/50 text-sm"
+              min={nodeData.config?.min || 0}
+              max={nodeData.config?.max || 100}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    if (nodeData.type === 'imageInput') {
+      return (
+        <div className="w-full space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-500/30 flex items-center justify-center">
+              <Image className="w-4 h-4 text-blue-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-sm text-foreground">
+                {nodeData.label}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Upload or provide a image
+              </p>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground">Enter image URL (https://...)</label>
+            <Input
+              value={imageUrl}
+              onChange={(e) => handleImageUrlChange(e.target.value)}
+              placeholder="https://..."
+              className="w-full bg-background/50 border-border/50 text-sm"
+            />
+            <Button variant="outline" size="sm" className="w-full">
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Image or Enter URL Above
+            </Button>
+            {imageUrl && (
+              <div className="mt-2 p-2 bg-background/30 border border-border/30 rounded-lg">
+                <img src={imageUrl} alt="Preview" className="max-h-20 object-contain" />
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (nodeData.type === 'toggleInput') {
+      return (
+        <div className="w-full space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-purple-500/30 flex items-center justify-center">
+              <ToggleLeft className="w-4 h-4 text-purple-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-sm text-foreground">
+                {nodeData.label}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Toggle between true and false
+              </p>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground">Checkbox Input</label>
+            <div className="flex items-center gap-2 p-3 bg-background/30 border border-border/30 rounded-lg">
+              <Switch
+                checked={toggleValue}
+                onCheckedChange={handleToggleChange}
+              />
+              <span className="text-sm text-foreground">
+                Toggle between true and false
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (nodeData.type === 'sliderInput') {
+      return (
+        <div className="w-full space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-cyan-500/30 flex items-center justify-center">
+              <Sliders className="w-4 h-4 text-cyan-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-sm text-foreground">
+                {nodeData.label}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Select a value using a slider
+              </p>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-xs text-muted-foreground">Slider Input</label>
+              <span className="text-sm font-medium">{sliderValue[0]}</span>
+            </div>
+            <div className="p-3 bg-background/30 border border-border/30 rounded-lg">
+              <Slider
+                value={sliderValue}
+                onValueChange={handleSliderChange}
+                max={nodeData.config?.max || 100}
+                min={nodeData.config?.min || 0}
+                step={1}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>{nodeData.config?.min || 0}</span>
+                <span>{nodeData.config?.max || 100}</span>
+              </div>
+            </div>
           </div>
         </div>
       );
@@ -132,12 +329,27 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
     );
   };
 
+  const getNodeWidth = () => {
+    switch (nodeData.type) {
+      case 'input':
+      case 'numberInput':
+      case 'imageInput':
+      case 'toggleInput':
+      case 'sliderInput':
+        return 'min-w-[320px]';
+      case 'output':
+        return 'min-w-[250px]';
+      default:
+        return 'min-w-[200px]';
+    }
+  };
+
   return (
     <ContextMenu>
       <ContextMenuTrigger>
         <div className={cn(
           'workflow-node p-4',
-          nodeData.type === 'input' ? 'min-w-[300px]' : nodeData.type === 'output' ? 'min-w-[250px]' : 'min-w-[200px]',
+          getNodeWidth(),
           getNodeStyles(nodeData.type),
           selected && 'selected'
         )}>

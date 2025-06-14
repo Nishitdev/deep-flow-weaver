@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { NodeConfig } from '@/types/workflow';
@@ -52,6 +54,117 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
                 value={config.inputText || ''}
                 onChange={(e) => setConfig({ ...config, inputText: e.target.value })}
                 rows={4}
+              />
+            </div>
+          </div>
+        );
+      
+      case 'numberInput':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="inputValue">Default Number Value</Label>
+              <Input
+                id="inputValue"
+                type="number"
+                placeholder="Enter default number..."
+                value={config.inputValue || 0}
+                onChange={(e) => setConfig({ ...config, inputValue: Number(e.target.value) })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="minValue">Minimum Value</Label>
+              <Input
+                id="minValue"
+                type="number"
+                placeholder="Minimum value"
+                value={config.min || 0}
+                onChange={(e) => setConfig({ ...config, min: Number(e.target.value) })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="maxValue">Maximum Value</Label>
+              <Input
+                id="maxValue"
+                type="number"
+                placeholder="Maximum value"
+                value={config.max || 100}
+                onChange={(e) => setConfig({ ...config, max: Number(e.target.value) })}
+              />
+            </div>
+          </div>
+        );
+
+      case 'imageInput':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="imageUrl">Default Image URL</Label>
+              <Input
+                id="imageUrl"
+                placeholder="https://example.com/image.jpg"
+                value={config.imageUrl || ''}
+                onChange={(e) => setConfig({ ...config, imageUrl: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Allowed File Types</Label>
+              <p className="text-sm text-muted-foreground">
+                Images (JPG, PNG, GIF, WebP)
+              </p>
+            </div>
+          </div>
+        );
+
+      case 'toggleInput':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="toggleValue">Default Toggle State</Label>
+              <Switch
+                id="toggleValue"
+                checked={config.toggleValue || false}
+                onCheckedChange={(checked) => setConfig({ ...config, toggleValue: checked })}
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Set the initial state of the toggle (true/false).
+            </p>
+          </div>
+        );
+
+      case 'sliderInput':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="sliderValue">Default Slider Value: {config.sliderValue || 50}</Label>
+              <Slider
+                value={[config.sliderValue || 50]}
+                onValueChange={(value) => setConfig({ ...config, sliderValue: value[0] })}
+                max={config.max || 100}
+                min={config.min || 0}
+                step={1}
+                className="w-full mt-2"
+              />
+            </div>
+            <div>
+              <Label htmlFor="minSlider">Minimum Value</Label>
+              <Input
+                id="minSlider"
+                type="number"
+                placeholder="Minimum value"
+                value={config.min || 0}
+                onChange={(e) => setConfig({ ...config, min: Number(e.target.value) })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="maxSlider">Maximum Value</Label>
+              <Input
+                id="maxSlider"
+                type="number"
+                placeholder="Maximum value"
+                value={config.max || 100}
+                onChange={(e) => setConfig({ ...config, max: Number(e.target.value) })}
               />
             </div>
           </div>

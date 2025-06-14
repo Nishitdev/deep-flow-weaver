@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Play, 
@@ -6,7 +7,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  Code
+  Code,
+  Hash,
+  Image,
+  ToggleLeft,
+  Sliders
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -42,6 +47,39 @@ const nodeCategories = [
         icon: 'checkCircle',
         description: 'Display output results',
         config: { outputText: '' },
+      },
+    ],
+  },
+  {
+    title: 'Input Nodes',
+    nodes: [
+      {
+        type: 'numberInput',
+        label: 'Number Input',
+        icon: 'hash',
+        description: 'A numeric input field',
+        config: { inputValue: 0, min: 0, max: 100 },
+      },
+      {
+        type: 'imageInput',
+        label: 'Image Input',
+        icon: 'image',
+        description: 'Upload or provide a image',
+        config: { imageUrl: '', imageFile: null },
+      },
+      {
+        type: 'toggleInput',
+        label: 'Toggle Input',
+        icon: 'toggleLeft',
+        description: 'Toggle between true and false',
+        config: { toggleValue: false },
+      },
+      {
+        type: 'sliderInput',
+        label: 'Slider Input',
+        icon: 'sliders',
+        description: 'Select a value using a slider',
+        config: { sliderValue: 50, min: 0, max: 100 },
       },
     ],
   },
@@ -125,6 +163,10 @@ const iconMap = {
   fileInput: FileInput,
   checkCircle: CheckCircle2,
   code: Code,
+  hash: Hash,
+  image: Image,
+  toggleLeft: ToggleLeft,
+  sliders: Sliders,
 };
 
 const NodeCard: React.FC<NodeCardProps> = ({ node, onAdd }) => {
