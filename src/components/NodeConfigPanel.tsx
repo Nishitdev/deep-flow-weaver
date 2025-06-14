@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Node } from '@xyflow/react';
 import { X, Settings } from 'lucide-react';
@@ -99,14 +98,55 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="imageUrl">Default Image URL</Label>
-              <Input
-                id="imageUrl"
-                placeholder="https://example.com/image.jpg"
-                value={config.imageUrl || ''}
-                onChange={(e) => setConfig({ ...config, imageUrl: e.target.value })}
-              />
+              <Label>Upload Type</Label>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  variant={config.uploadType === 'url' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setConfig({ ...config, uploadType: 'url', imageFile: null })}
+                >
+                  URL
+                </Button>
+                <Button
+                  variant={config.uploadType === 'file' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setConfig({ ...config, uploadType: 'file', imageUrl: '' })}
+                >
+                  Upload File
+                </Button>
+              </div>
             </div>
+            
+            {config.uploadType === 'url' ? (
+              <div>
+                <Label htmlFor="imageUrl">Image URL</Label>
+                <Input
+                  id="imageUrl"
+                  placeholder="https://example.com/image.jpg"
+                  value={config.imageUrl || ''}
+                  onChange={(e) => setConfig({ ...config, imageUrl: e.target.value })}
+                />
+              </div>
+            ) : (
+              <div>
+                <Label htmlFor="imageFile">Upload Image File</Label>
+                <Input
+                  id="imageFile"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setConfig({ ...config, imageFile: file });
+                  }}
+                />
+                {config.imageFile && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Selected: {config.imageFile.name}
+                  </p>
+                )}
+              </div>
+            )}
+            
             <div>
               <Label>Allowed File Types</Label>
               <p className="text-sm text-muted-foreground">

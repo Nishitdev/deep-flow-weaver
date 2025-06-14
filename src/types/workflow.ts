@@ -7,6 +7,7 @@ export interface NodeConfig {
   max?: number;
   imageUrl?: string;
   imageFile?: File | null;
+  uploadType?: 'url' | 'file';
   toggleValue?: boolean;
   sliderValue?: number;
   code?: string;

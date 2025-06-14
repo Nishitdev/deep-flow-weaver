@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { 
@@ -62,6 +61,8 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
   const [inputValue, setInputValue] = useState(nodeData.config?.inputText || '');
   const [numberValue, setNumberValue] = useState(nodeData.config?.inputValue || 0);
   const [imageUrl, setImageUrl] = useState(nodeData.config?.imageUrl || '');
+  const [imageFile, setImageFile] = useState<File | null>(nodeData.config?.imageFile || null);
+  const [uploadType, setUploadType] = useState(nodeData.config?.uploadType || 'url');
   const [toggleValue, setToggleValue] = useState(nodeData.config?.toggleValue || false);
   const [sliderValue, setSliderValue] = useState([nodeData.config?.sliderValue || 50]);
   
@@ -85,6 +86,27 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
     setImageUrl(value);
     if (nodeData.config) {
       nodeData.config.imageUrl = value;
+    }
+  };
+
+  const handleImageFileChange = (file: File | null) => {
+    setImageFile(file);
+    if (nodeData.config) {
+      nodeData.config.imageFile = file;
+    }
+  };
+
+  const handleUploadTypeChange = (type: 'url' | 'file') => {
+    setUploadType(type);
+    if (nodeData.config) {
+      nodeData.config.uploadType = type;
+      if (type === 'url') {
+        nodeData.config.imageFile = null;
+        setImageFile(null);
+      } else {
+        nodeData.config.imageUrl = '';
+        setImageUrl('');
+      }
     }
   };
 
@@ -173,6 +195,8 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
     }
 
     if (nodeData.type === 'imageInput') {
+      const previewUrl = uploadType === 'url' ? imageUrl : (imageFile ? URL.createObjectURL(imageFile) : '');
+      
       return (
         <div className="w-full space-y-3">
           <div className="flex items-center gap-3">
@@ -184,26 +208,61 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
                 {nodeData.label}
               </h3>
               <p className="text-xs text-muted-foreground">
-                Upload or provide a image
+                Upload or provide an image
               </p>
             </div>
           </div>
           
           <div className="space-y-2">
-            <label className="text-xs text-muted-foreground">Enter image URL (https://...)</label>
-            <Input
-              value={imageUrl}
-              onChange={(e) => handleImageUrlChange(e.target.value)}
-              placeholder="https://..."
-              className="w-full bg-background/50 border-border/50 text-sm"
-            />
-            <Button variant="outline" size="sm" className="w-full">
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Image or Enter URL Above
-            </Button>
-            {imageUrl && (
+            <div className="flex gap-1">
+              <Button
+                variant={uploadType === 'url' ? 'default' : 'outline'}
+                size="sm"
+                className="flex-1 text-xs"
+                onClick={() => handleUploadTypeChange('url')}
+              >
+                URL
+              </Button>
+              <Button
+                variant={uploadType === 'file' ? 'default' : 'outline'}
+                size="sm"
+                className="flex-1 text-xs"
+                onClick={() => handleUploadTypeChange('file')}
+              >
+                Upload
+              </Button>
+            </div>
+            
+            {uploadType === 'url' ? (
+              <>
+                <label className="text-xs text-muted-foreground">Image URL</label>
+                <Input
+                  value={imageUrl}
+                  onChange={(e) => handleImageUrlChange(e.target.value)}
+                  placeholder="https://..."
+                  className="w-full bg-background/50 border-border/50 text-sm"
+                />
+              </>
+            ) : (
+              <>
+                <label className="text-xs text-muted-foreground">Upload File</label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageFileChange(e.target.files?.[0] || null)}
+                  className="w-full bg-background/50 border-border/50 text-sm"
+                />
+                {imageFile && (
+                  <p className="text-xs text-muted-foreground">
+                    {imageFile.name}
+                  </p>
+                )}
+              </>
+            )}
+            
+            {previewUrl && (
               <div className="mt-2 p-2 bg-background/30 border border-border/30 rounded-lg">
-                <img src={imageUrl} alt="Preview" className="max-h-20 object-contain" />
+                <img src={previewUrl} alt="Preview" className="max-h-20 object-contain w-full" />
               </div>
             )}
           </div>
