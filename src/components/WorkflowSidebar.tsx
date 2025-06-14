@@ -2,14 +2,8 @@
 import React from 'react';
 import { 
   Play, 
-  Brain, 
-  Database, 
-  Filter, 
-  Mail, 
-  Webhook,
-  Calendar,
-  Image,
-  FileText,
+  FileInput,
+  FileOutput,
   ChevronLeft,
   ChevronRight,
   Plus
@@ -27,7 +21,7 @@ interface SidebarProps {
 
 const nodeCategories = [
   {
-    title: 'Triggers',
+    title: 'Essential Nodes',
     nodes: [
       {
         type: 'trigger',
@@ -37,88 +31,17 @@ const nodeCategories = [
         config: {},
       },
       {
-        type: 'trigger',
-        label: 'Webhook',
-        icon: 'webhook',
-        description: 'Trigger via HTTP request',
-        config: {},
-      },
-      {
-        type: 'trigger',
-        label: 'Schedule',
-        icon: 'calendar',
-        description: 'Run on schedule',
-        config: {},
-      },
-    ],
-  },
-  {
-    title: 'AI Nodes',
-    nodes: [
-      {
-        type: 'ai',
-        label: 'OpenAI GPT',
-        icon: 'brain',
-        description: 'Generate text with GPT',
-        config: {},
-      },
-      {
-        type: 'ai',
-        label: 'Claude AI',
-        icon: 'brain',
-        description: 'Process with Claude',
-        config: {},
-      },
-      {
-        type: 'ai',
-        label: 'Image Analysis',
-        icon: 'image',
-        description: 'Analyze images with AI',
-        config: {},
-      },
-    ],
-  },
-  {
-    title: 'Data Processing',
-    nodes: [
-      {
-        type: 'data',
-        label: 'Filter',
-        icon: 'filter',
-        description: 'Filter data by conditions',
-        config: {},
-      },
-      {
-        type: 'data',
-        label: 'Transform',
-        icon: 'database',
-        description: 'Transform data structure',
-        config: {},
-      },
-      {
-        type: 'data',
-        label: 'Extract Text',
-        icon: 'fileText',
-        description: 'Extract text from files',
-        config: {},
-      },
-    ],
-  },
-  {
-    title: 'Outputs',
-    nodes: [
-      {
-        type: 'output',
-        label: 'Send Email',
-        icon: 'mail',
-        description: 'Send email notification',
+        type: 'input',
+        label: 'Text Input',
+        icon: 'fileInput',
+        description: 'Input text data',
         config: {},
       },
       {
         type: 'output',
-        label: 'Save to Database',
-        icon: 'database',
-        description: 'Store data in database',
+        label: 'Text Output',
+        icon: 'fileOutput',
+        description: 'Output text result',
         config: {},
       },
     ],
@@ -173,9 +96,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, onAddNode })
                   />
                 ))}
               </div>
-              {category !== nodeCategories[nodeCategories.length - 1] && (
-                <Separator className="mt-4" />
-              )}
             </div>
           ))}
         </div>
@@ -191,14 +111,8 @@ interface NodeCardProps {
 
 const iconMap = {
   play: Play,
-  brain: Brain,
-  database: Database,
-  filter: Filter,
-  mail: Mail,
-  webhook: Webhook,
-  calendar: Calendar,
-  image: Image,
-  fileText: FileText,
+  fileInput: FileInput,
+  fileOutput: FileOutput,
 };
 
 const NodeCard: React.FC<NodeCardProps> = ({ node, onAdd }) => {

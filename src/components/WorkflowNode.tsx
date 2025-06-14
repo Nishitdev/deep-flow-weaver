@@ -3,39 +3,23 @@ import React from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { 
   Play, 
-  Brain, 
-  Database, 
-  Filter, 
-  Mail, 
-  Webhook,
-  Calendar,
-  Image,
-  FileText,
-  Zap
+  FileInput,
+  FileOutput
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const iconMap = {
   play: Play,
-  brain: Brain,
-  database: Database,
-  filter: Filter,
-  mail: Mail,
-  webhook: Webhook,
-  calendar: Calendar,
-  image: Image,
-  fileText: FileText,
-  zap: Zap,
+  fileInput: FileInput,
+  fileOutput: FileOutput,
 };
 
 const getNodeStyles = (type: string) => {
   switch (type) {
     case 'trigger':
       return 'node-trigger';
-    case 'ai':
-      return 'node-ai';
-    case 'data':
-      return 'node-data';
+    case 'input':
+      return 'node-input';
     case 'output':
       return 'node-output';
     default:
@@ -44,7 +28,7 @@ const getNodeStyles = (type: string) => {
 };
 
 export const WorkflowNode: React.FC<NodeProps> = ({ data, selected }) => {
-  const nodeData = data as any; // Type assertion to access our custom properties
+  const nodeData = data as any;
   const IconComponent = iconMap[nodeData.icon as keyof typeof iconMap] || Play;
   
   return (

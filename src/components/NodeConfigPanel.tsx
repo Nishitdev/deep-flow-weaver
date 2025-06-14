@@ -21,7 +21,7 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
   onClose,
   onUpdate,
 }) => {
-  const nodeData = node.data as any; // Type assertion for our custom properties
+  const nodeData = node.data as any;
   const [config, setConfig] = useState<NodeConfig>(nodeData.config || {});
   const [label, setLabel] = useState<string>(nodeData.label || '');
   const [description, setDescription] = useState<string>(nodeData.description || '');
@@ -41,79 +41,17 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
 
   const renderConfigFields = () => {
     switch (nodeData.type) {
-      case 'ai':
+      case 'input':
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="apiKey">API Key</Label>
-              <Input
-                id="apiKey"
-                type="password"
-                placeholder="Enter API key"
-                value={config.apiKey || ''}
-                onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="model">Model</Label>
-              <Input
-                id="model"
-                placeholder="gpt-4o-mini"
-                value={config.model || ''}
-                onChange={(e) => setConfig({ ...config, model: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="prompt">Prompt Template</Label>
+              <Label htmlFor="inputText">Input Text</Label>
               <Textarea
-                id="prompt"
-                placeholder="Enter your prompt template..."
-                value={config.prompt || ''}
-                onChange={(e) => setConfig({ ...config, prompt: e.target.value })}
+                id="inputText"
+                placeholder="Enter your input text..."
+                value={config.inputText || ''}
+                onChange={(e) => setConfig({ ...config, inputText: e.target.value })}
                 rows={4}
-              />
-            </div>
-          </div>
-        );
-      
-      case 'trigger':
-        return (
-          <div className="space-y-4">
-            {nodeData.label === 'Webhook' && (
-              <div>
-                <Label htmlFor="webhookUrl">Webhook URL</Label>
-                <Input
-                  id="webhookUrl"
-                  placeholder="https://..."
-                  value={config.webhookUrl || ''}
-                  onChange={(e) => setConfig({ ...config, webhookUrl: e.target.value })}
-                />
-              </div>
-            )}
-            {nodeData.label === 'Schedule' && (
-              <div>
-                <Label htmlFor="schedule">Cron Expression</Label>
-                <Input
-                  id="schedule"
-                  placeholder="0 9 * * *"
-                  value={config.schedule || ''}
-                  onChange={(e) => setConfig({ ...config, schedule: e.target.value })}
-                />
-              </div>
-            )}
-          </div>
-        );
-      
-      case 'data':
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="condition">Filter Condition</Label>
-              <Input
-                id="condition"
-                placeholder="value > 10"
-                value={config.condition || ''}
-                onChange={(e) => setConfig({ ...config, condition: e.target.value })}
               />
             </div>
           </div>
@@ -122,29 +60,26 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
       case 'output':
         return (
           <div className="space-y-4">
-            {nodeData.label === 'Send Email' && (
-              <>
-                <div>
-                  <Label htmlFor="to">To Email</Label>
-                  <Input
-                    id="to"
-                    type="email"
-                    placeholder="user@example.com"
-                    value={config.to || ''}
-                    onChange={(e) => setConfig({ ...config, to: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="subject">Subject</Label>
-                  <Input
-                    id="subject"
-                    placeholder="Email subject"
-                    value={config.subject || ''}
-                    onChange={(e) => setConfig({ ...config, subject: e.target.value })}
-                  />
-                </div>
-              </>
-            )}
+            <div>
+              <Label htmlFor="outputText">Output Text</Label>
+              <Textarea
+                id="outputText"
+                placeholder="Output will appear here..."
+                value={config.outputText || ''}
+                onChange={(e) => setConfig({ ...config, outputText: e.target.value })}
+                rows={4}
+                readOnly
+              />
+            </div>
+          </div>
+        );
+      
+      case 'trigger':
+        return (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              This node starts the workflow manually. No configuration needed.
+            </p>
           </div>
         );
       

@@ -1,13 +1,7 @@
 
 export interface NodeConfig {
-  apiKey?: string;
-  model?: string;
-  prompt?: string;
-  webhookUrl?: string;
-  schedule?: string;
-  condition?: string;
-  to?: string;
-  subject?: string;
+  inputText?: string;
+  outputText?: string;
   [key: string]: any;
 }
 
