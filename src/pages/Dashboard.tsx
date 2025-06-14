@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { useWorkflows, Workflow } from '@/hooks/useWorkflows';
 import { CreateWorkflowDialog } from '@/components/CreateWorkflowDialog';
+import { DeleteWorkflowDialog } from '@/components/DeleteWorkflowDialog';
 import { toast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
@@ -15,6 +16,8 @@ const Dashboard = () => {
   const [editingWorkflow, setEditingWorkflow] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [workflowToDelete, setWorkflowToDelete] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     const fetchWorkflows = async () => {
@@ -39,21 +42,28 @@ const Dashboard = () => {
   };
 
   const handleDeleteWorkflow = async (workflowId: string, workflowName: string) => {
-    if (window.confirm(`Are you sure you want to delete "${workflowName}"?`)) {
-      try {
-        await deleteWorkflow(workflowId);
-        toast({
-          title: "Workflow Deleted",
-          description: `"${workflowName}" has been deleted successfully!`,
-        });
-      } catch (error) {
-        console.error('Failed to delete workflow:', error);
-        toast({
-          title: "Delete Failed",
-          description: "Failed to delete workflow. Please try again.",
-          variant: "destructive",
-        });
-      }
+    setWorkflowToDelete({ id: workflowId, name: workflowName });
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteWorkflow = async () => {
+    if (!workflowToDelete) return;
+
+    try {
+      await deleteWorkflow(workflowToDelete.id);
+      toast({
+        title: "Workflow Deleted",
+        description: `"${workflowToDelete.name}" has been deleted successfully!`,
+      });
+    } catch (error) {
+      console.error('Failed to delete workflow:', error);
+      toast({
+        title: "Delete Failed",
+        description: "Failed to delete workflow. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setWorkflowToDelete(null);
     }
   };
 
@@ -269,6 +279,14 @@ const Dashboard = () => {
       <CreateWorkflowDialog 
         open={showCreateDialog} 
         onOpenChange={setShowCreateDialog} 
+      />
+
+      <DeleteWorkflowDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        workflowName={workflowToDelete?.name || ''}
+        onConfirm={confirmDeleteWorkflow}
+        isLoading={isLoading}
       />
     </div>
   );
