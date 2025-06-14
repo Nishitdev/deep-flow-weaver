@@ -164,7 +164,6 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     setNodes((nds) => nds.filter((node) => node.id !== nodeId));
     setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
     
-    // Close config panel if the deleted node was selected
     if (selectedNode?.id === nodeId) {
       setSelectedNode(null);
     }
@@ -245,7 +244,6 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     const startTime = Date.now();
 
     try {
-      // Execute nodes in sequence
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
         const nodeData = node.data as WorkflowNodeData;
@@ -253,7 +251,6 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
         
         addExecutionLog(`Starting execution of node: ${nodeName}`, "info", node.id, nodeName);
         
-        // Add executing class
         setNodes((nds) =>
           nds.map((n) =>
             n.id === node.id
@@ -262,18 +259,15 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
           )
         );
 
-        // Simulate node execution time
-        const executionTime = 1000 + Math.random() * 1000; // 1-2 seconds
+        const executionTime = 1000 + Math.random() * 1000;
         addExecutionLog(`Processing ${nodeData.type} node...`, "info", node.id, nodeName);
         
         await new Promise(resolve => setTimeout(resolve, executionTime));
 
-        // Handle different node types
         if (nodeData.type === 'input') {
           const inputText = nodeData.config?.inputText || 'Default input';
           addExecutionLog(`Input received: "${inputText}"`, "success", node.id, nodeName);
         } else if (nodeData.type === 'output') {
-          // For output nodes, simulate receiving data from input nodes
           const inputNodes = nodes.filter(n => {
             const data = n.data as WorkflowNodeData;
             return data.type === 'input';
@@ -312,7 +306,6 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
           const language = nodeData.config?.language || 'javascript';
           addExecutionLog(`Executing ${language} code...`, "info", node.id, nodeName);
           
-          // Simulate code execution
           if (code.includes('console.log')) {
             addExecutionLog("Code executed with console output", "success", node.id, nodeName);
           } else {
@@ -322,7 +315,6 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
 
         addExecutionLog(`Node "${nodeName}" completed successfully`, "success", node.id, nodeName);
         
-        // Remove executing class
         setNodes((nds) =>
           nds.map((n) =>
             n.id === node.id
@@ -456,9 +448,15 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
               size={1}
               color="rgba(139, 92, 246, 0.3)"
             />
-            <Controls className="glassmorphism" />
+            <Controls 
+              className="!bg-card/90 !border-border !backdrop-blur-sm !shadow-lg !rounded-lg"
+              showZoom={true}
+              showFitView={true}
+              showInteractive={true}
+              position="bottom-left"
+            />
             <MiniMap 
-              className="glassmorphism"
+              className="!bg-card/90 !border-border !backdrop-blur-sm !shadow-lg !rounded-lg"
               nodeColor={(node) => {
                 switch (node.type) {
                   case 'customCode':
@@ -480,6 +478,8 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
                 }
               }}
               maskColor="rgba(0, 0, 0, 0.8)"
+              pannable
+              zoomable
             />
           </ReactFlow>
 
