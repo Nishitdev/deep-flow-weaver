@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   ReactFlow,
   Node,
@@ -23,6 +23,7 @@ import { Play, Square, Save, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { WorkflowNodeData } from '@/types/workflow';
+import { Workflow } from '@/hooks/useWorkflows';
 
 const nodeTypes = {
   workflowNode: WorkflowNode,
@@ -31,7 +32,11 @@ const nodeTypes = {
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
 
-export const WorkflowBuilder: React.FC = () => {
+interface WorkflowBuilderProps {
+  initialWorkflow?: Workflow | null;
+}
+
+export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflow }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -39,6 +44,18 @@ export const WorkflowBuilder: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showLoadDialog, setShowLoadDialog] = useState(false);
+
+  // Load initial workflow if provided
+  useEffect(() => {
+    if (initialWorkflow) {
+      setNodes(initialWorkflow.nodes);
+      setEdges(initialWorkflow.edges);
+      toast({
+        title: "Workflow Loaded",
+        description: `"${initialWorkflow.name}" has been loaded successfully!`,
+      });
+    }
+  }, [initialWorkflow, setNodes, setEdges]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
