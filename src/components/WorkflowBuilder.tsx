@@ -19,7 +19,8 @@ import { WorkflowHeader } from './WorkflowHeader';
 import { NodeConfigPanel } from './NodeConfigPanel';
 import { SaveWorkflowDialog } from './SaveWorkflowDialog';
 import { LoadWorkflowDialog } from './LoadWorkflowDialog';
-import { Play, Square, Save, FolderOpen } from 'lucide-react';
+import { WorkflowLogs } from './WorkflowLogs';
+import { Play, Square, Save, FolderOpen, Logs } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { WorkflowNodeData } from '@/types/workflow';
@@ -44,6 +45,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showLoadDialog, setShowLoadDialog] = useState(false);
+  const [showLogsDialog, setShowLogsDialog] = useState(false);
 
   // Load initial workflow if provided
   useEffect(() => {
@@ -205,6 +207,13 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
               Load
             </Button>
             <Button
+              onClick={() => setShowLogsDialog(true)}
+              variant="outline"
+            >
+              <Logs className="w-4 h-4 mr-2" />
+              Logs
+            </Button>
+            <Button
               onClick={executeWorkflow}
               disabled={isExecuting}
               className="bg-green-600 hover:bg-green-700"
@@ -279,6 +288,12 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
         open={showLoadDialog}
         onOpenChange={setShowLoadDialog}
         onLoadWorkflow={loadWorkflow}
+      />
+
+      <WorkflowLogs
+        open={showLogsDialog}
+        onOpenChange={setShowLogsDialog}
+        workflowId={initialWorkflow?.id}
       />
     </div>
   );
