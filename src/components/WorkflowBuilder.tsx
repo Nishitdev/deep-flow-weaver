@@ -38,6 +38,15 @@ const nodeTypes = {
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
 
+interface LogEntry {
+  id: string;
+  timestamp: string;
+  message: string;
+  type: 'info' | 'error' | 'warning' | 'success';
+  nodeId?: string;
+  nodeName?: string;
+}
+
 interface WorkflowBuilderProps {
   initialWorkflow?: Workflow | null;
 }
@@ -56,6 +65,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
   const [showDebugMode, setShowDebugMode] = useState(false);
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
   const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
+  const [executionLogs, setExecutionLogs] = useState<LogEntry[]>([]);
   const { updateWorkflow } = useWorkflows();
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -125,6 +135,22 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     };
   }, [edges, currentWorkflowId, autoSaveWorkflow, nodes]);
 
+  const addExecutionLog = (message: string, type: LogEntry['type'] = 'info', nodeId?: string, nodeName?: string) => {
+    const newLog: LogEntry = {
+      id: `${Date.now()}-${Math.random()}`,
+      timestamp: new Date().toLocaleTimeString(),
+      message,
+      type,
+      nodeId,
+      nodeName,
+    };
+    setExecutionLogs(prev => [...prev, newLog]);
+  };
+
+  const clearExecutionLogs = () => {
+    setExecutionLogs([]);
+  };
+
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
     [setEdges]
@@ -153,6 +179,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
   const loadWorkflow = useCallback((loadedNodes: Node[], loadedEdges: Edge[]) => {
     setNodes(loadedNodes);
     setEdges(loadedEdges);
+    clearExecutionLogs();
     toast({
       title: "Workflow Loaded",
       description: "Workflow has been loaded successfully!",
@@ -170,55 +197,96 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     }
 
     setIsExecuting(true);
+    clearExecutionLogs();
+    
+    addExecutionLog("Workflow execution started", "info");
+    addExecutionLog(`Found ${nodes.length} nodes to execute`, "info");
+    
     toast({
       title: "Workflow Execution Started",
       description: "Your workflow is now running...",
     });
 
-    // Simulate workflow execution with proper data flow
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i];
-      const nodeData = node.data as WorkflowNodeData;
-      
-      // Add executing class
-      setNodes((nds) =>
-        nds.map((n) =>
-          n.id === node.id
-            ? { ...n, className: 'node-executing' }
-            : { ...n, className: '' }
-        )
-      );
+    const startTime = Date.now();
 
-      await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      // Execute nodes in sequence
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        const nodeData = node.data as WorkflowNodeData;
+        const nodeName = nodeData.label || `Node ${i + 1}`;
+        
+        addExecutionLog(`Starting execution of node: ${nodeName}`, "info", node.id, nodeName);
+        
+        // Add executing class
+        setNodes((nds) =>
+          nds.map((n) =>
+            n.id === node.id
+              ? { ...n, className: 'node-executing' }
+              : { ...n, className: '' }
+          )
+        );
 
-      // For output nodes, simulate receiving data from input nodes
-      if (nodeData.type === 'output') {
-        const inputNodes = nodes.filter(n => {
-          const data = n.data as WorkflowNodeData;
-          return data.type === 'input';
-        });
-        if (inputNodes.length > 0) {
-          const inputNodeData = inputNodes[0].data as WorkflowNodeData;
-          const inputText = inputNodeData.config?.inputText || 'Hello World';
-          setNodes((nds) =>
-            nds.map((n) =>
-              n.id === node.id
-                ? { 
-                    ...n, 
-                    data: { 
-                      ...nodeData, 
-                      config: { 
-                        ...nodeData.config, 
-                        outputText: inputText 
-                      } 
-                    },
-                    className: ''
-                  }
-                : n.className === 'node-executing' ? { ...n, className: '' } : n
-            )
-          );
+        // Simulate node execution time
+        const executionTime = 1000 + Math.random() * 1000; // 1-2 seconds
+        addExecutionLog(`Processing ${nodeData.type} node...`, "info", node.id, nodeName);
+        
+        await new Promise(resolve => setTimeout(resolve, executionTime));
+
+        // Handle different node types
+        if (nodeData.type === 'input') {
+          const inputText = nodeData.config?.inputText || 'Default input';
+          addExecutionLog(`Input received: "${inputText}"`, "success", node.id, nodeName);
+        } else if (nodeData.type === 'output') {
+          // For output nodes, simulate receiving data from input nodes
+          const inputNodes = nodes.filter(n => {
+            const data = n.data as WorkflowNodeData;
+            return data.type === 'input';
+          });
+          
+          if (inputNodes.length > 0) {
+            const inputNodeData = inputNodes[0].data as WorkflowNodeData;
+            const inputText = inputNodeData.config?.inputText || 'Hello World';
+            
+            setNodes((nds) =>
+              nds.map((n) =>
+                n.id === node.id
+                  ? { 
+                      ...n, 
+                      data: { 
+                        ...nodeData, 
+                        config: { 
+                          ...nodeData.config, 
+                          outputText: inputText 
+                        } 
+                      },
+                      className: ''
+                    }
+                  : n.className === 'node-executing' ? { ...n, className: '' } : n
+              )
+            );
+            
+            addExecutionLog(`Output generated: "${inputText}"`, "success", node.id, nodeName);
+          } else {
+            addExecutionLog("No input data available for output node", "warning", node.id, nodeName);
+          }
+        } else if (nodeData.type === 'trigger') {
+          addExecutionLog("Trigger activated successfully", "success", node.id, nodeName);
+        } else if (nodeData.type === 'customCode') {
+          const code = nodeData.config?.code || '';
+          const language = nodeData.config?.language || 'javascript';
+          addExecutionLog(`Executing ${language} code...`, "info", node.id, nodeName);
+          
+          // Simulate code execution
+          if (code.includes('console.log')) {
+            addExecutionLog("Code executed with console output", "success", node.id, nodeName);
+          } else {
+            addExecutionLog("Code executed successfully", "success", node.id, nodeName);
+          }
         }
-      } else {
+
+        addExecutionLog(`Node "${nodeName}" completed successfully`, "success", node.id, nodeName);
+        
         // Remove executing class
         setNodes((nds) =>
           nds.map((n) =>
@@ -228,18 +296,32 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
           )
         );
       }
-    }
 
-    setIsExecuting(false);
-    toast({
-      title: "Workflow Completed",
-      description: "Your workflow has been executed successfully!",
-    });
+      const totalTime = Date.now() - startTime;
+      addExecutionLog(`Workflow completed in ${(totalTime / 1000).toFixed(2)} seconds`, "success");
+      
+      toast({
+        title: "Workflow Completed",
+        description: "Your workflow has been executed successfully!",
+      });
+      
+    } catch (error) {
+      addExecutionLog(`Workflow execution failed: ${error}`, "error");
+      toast({
+        title: "Execution Failed",
+        description: "An error occurred during workflow execution.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExecuting(false);
+      setNodes((nds) => nds.map((node) => ({ ...node, className: '' })));
+    }
   };
 
   const stopWorkflow = () => {
     setIsExecuting(false);
     setNodes((nds) => nds.map((node) => ({ ...node, className: '' })));
+    addExecutionLog("Workflow execution stopped by user", "warning");
     toast({
       title: "Workflow Stopped",
       description: "Workflow execution has been terminated.",
@@ -400,6 +482,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
         open={showLogsDialog}
         onOpenChange={setShowLogsDialog}
         workflowId={initialWorkflow?.id}
+        logs={executionLogs}
       />
 
       <ExecutionHistory

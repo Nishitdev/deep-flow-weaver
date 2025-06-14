@@ -15,131 +15,47 @@ interface LogEntry {
   timestamp: string;
   message: string;
   type: 'info' | 'error' | 'warning' | 'success';
+  nodeId?: string;
+  nodeName?: string;
 }
 
 interface WorkflowLogsProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   workflowId?: string;
+  logs?: LogEntry[];
 }
 
 export const WorkflowLogs: React.FC<WorkflowLogsProps> = ({
   open,
   onOpenChange,
   workflowId,
+  logs = [],
 }) => {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [internalLogs, setInternalLogs] = useState<LogEntry[]>([]);
 
-  // Mock logs for demonstration - in a real app, these would come from your backend
   useEffect(() => {
-    if (open && workflowId) {
+    if (logs.length > 0) {
+      setInternalLogs(logs);
+    } else if (open && workflowId) {
+      // Fallback to mock logs only if no real logs are provided
       const mockLogs: LogEntry[] = [
         {
           id: '1',
-          timestamp: '7:50:25 PM',
-          message: 'Prediction status: processing',
+          timestamp: new Date().toLocaleTimeString(),
+          message: 'Workflow execution started',
           type: 'info'
         },
         {
           id: '2',
-          timestamp: '7:50:25 PM',
-          message: 'Replicate: Transcribe with large-v3 model.',
-          type: 'info'
-        },
-        {
-          id: '3',
-          timestamp: '7:50:28 PM',
-          message: 'Prediction status: processing',
-          type: 'info'
-        },
-        {
-          id: '4',
-          timestamp: '7:50:28 PM',
-          message: 'Replicate: Transcribe with large-v3 model.',
-          type: 'info'
-        },
-        {
-          id: '5',
-          timestamp: '7:50:31 PM',
-          message: 'Prediction status: processing',
-          type: 'info'
-        },
-        {
-          id: '6',
-          timestamp: '7:50:31 PM',
-          message: 'Replicate: Transcribe with large-v3 model.',
-          type: 'info'
-        },
-        {
-          id: '7',
-          timestamp: '7:50:34 PM',
-          message: 'Prediction status: processing',
-          type: 'info'
-        },
-        {
-          id: '8',
-          timestamp: '7:50:34 PM',
-          message: 'Replicate: Transcribe with large-v3 model.',
-          type: 'info'
-        },
-        {
-          id: '9',
-          timestamp: '7:50:37 PM',
-          message: 'Prediction status: processing',
-          type: 'info'
-        },
-        {
-          id: '10',
-          timestamp: '7:50:37 PM',
-          message: 'Replicate: Transcribe with large-v3 model.',
-          type: 'info'
-        },
-        {
-          id: '11',
-          timestamp: '7:50:40 PM',
-          message: 'Prediction status: processing',
-          type: 'info'
-        },
-        {
-          id: '12',
-          timestamp: '7:50:40 PM',
-          message: 'Replicate: Transcribe with large-v3 model.',
-          type: 'info'
-        },
-        {
-          id: '13',
-          timestamp: '7:50:43 PM',
-          message: 'Prediction status: processing',
-          type: 'info'
-        },
-        {
-          id: '14',
-          timestamp: '7:50:43 PM',
-          message: 'Replicate: Transcribe with large-v3 model.',
-          type: 'info'
-        },
-        {
-          id: '15',
-          timestamp: '7:50:46 PM',
-          message: 'Prediction status: processing',
-          type: 'info'
-        },
-        {
-          id: '16',
-          timestamp: '7:50:46 PM',
-          message: 'Replicate: Transcribe with large-v3 model.',
-          type: 'info'
-        },
-        {
-          id: '17',
-          timestamp: '7:50:49 PM',
-          message: 'Prediction status: processing',
-          type: 'info'
+          timestamp: new Date().toLocaleTimeString(),
+          message: 'No execution logs available - run a workflow to see real logs',
+          type: 'warning'
         }
       ];
-      setLogs(mockLogs);
+      setInternalLogs(mockLogs);
     }
-  }, [open, workflowId]);
+  }, [open, workflowId, logs]);
 
   const getLogTypeColor = (type: string) => {
     switch (type) {
@@ -176,24 +92,35 @@ export const WorkflowLogs: React.FC<WorkflowLogsProps> = ({
           </div>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 px-6 py-4">
+        <ScrollArea className="flex-1 px-6 py-4 h-96">
           <div className="space-y-1 font-mono text-sm">
-            {logs.map((log) => (
-              <div key={log.id} className="flex gap-3">
-                <span className="text-gray-500 shrink-0">
-                  [{log.timestamp}]
-                </span>
-                <span className={getLogTypeColor(log.type)}>
-                  {log.message}
-                </span>
+            {internalLogs.length === 0 ? (
+              <div className="text-gray-500 text-center py-8">
+                No logs available. Run a workflow to see execution logs.
               </div>
-            ))}
+            ) : (
+              internalLogs.map((log) => (
+                <div key={log.id} className="flex gap-3">
+                  <span className="text-gray-500 shrink-0">
+                    [{log.timestamp}]
+                  </span>
+                  {log.nodeName && (
+                    <span className="text-blue-400 shrink-0">
+                      [{log.nodeName}]
+                    </span>
+                  )}
+                  <span className={getLogTypeColor(log.type)}>
+                    {log.message}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </ScrollArea>
         
         <div className="px-6 py-4 border-t border-gray-700 flex justify-end gap-2">
           <div className="flex items-center gap-4 text-xs text-gray-500">
-            <span>240</span>
+            <span>{internalLogs.length}</span>
             <span>LOGS</span>
           </div>
         </div>
