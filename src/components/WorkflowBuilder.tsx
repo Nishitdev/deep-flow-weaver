@@ -121,9 +121,9 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     }
   }, [currentWorkflowId, updateWorkflow]);
 
-  // Debounced auto-save when nodes change
+  // Debounced auto-save when nodes or edges change
   useEffect(() => {
-    if (!currentWorkflowId || nodes.length === 0) return;
+    if (!currentWorkflowId) return;
 
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
@@ -131,33 +131,14 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
 
     autoSaveTimeoutRef.current = setTimeout(() => {
       autoSaveWorkflow(nodes, edges);
-    }, 1000); // Auto-save after 1 second of inactivity
+    }, 1000);
 
     return () => {
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [nodes, currentWorkflowId, autoSaveWorkflow, edges]);
-
-  // Debounced auto-save when edges change
-  useEffect(() => {
-    if (!currentWorkflowId || edges.length === 0) return;
-
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
-
-    autoSaveTimeoutRef.current = setTimeout(() => {
-      autoSaveWorkflow(nodes, edges);
-    }, 1000); // Auto-save after 1 second of inactivity
-
-    return () => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-    };
-  }, [edges, currentWorkflowId, autoSaveWorkflow, nodes]);
+  }, [nodes, edges, currentWorkflowId, autoSaveWorkflow]);
 
   const addExecutionLog = (message: string, type: LogEntry['type'] = 'info', nodeId?: string, nodeName?: string) => {
     const newLog: LogEntry = {
@@ -313,20 +294,16 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     const startTime = Date.now();
 
     try {
-      // Create a map to store node execution results
       const nodeResults = new Map<string, any>();
       
-      // Find all trigger nodes (nodes with no incoming edges)
       const triggerNodes = nodes.filter(node => 
         !edges.some(edge => edge.target === node.id)
       );
 
       if (triggerNodes.length === 0) {
         addExecutionLog("No trigger nodes found. Executing all nodes in order.", "warning");
-        // Fallback to executing all nodes
         await executeNodesInOrder(nodes, nodeResults);
       } else {
-        // Execute workflow starting from trigger nodes
         for (const triggerNode of triggerNodes) {
           await executeNodeAndDependents(triggerNode, nodeResults);
         }
@@ -357,14 +334,12 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     const nodeData = node.data as WorkflowNodeData;
     const nodeName = nodeData.label || `Node ${node.id}`;
     
-    // Skip if already executed
     if (nodeResults.has(node.id)) {
       return nodeResults.get(node.id);
     }
 
     addExecutionLog(`Starting execution of node: ${nodeName}`, "info", node.id, nodeName);
     
-    // Highlight the executing node
     setNodes((nds) =>
       nds.map((n) =>
         n.id === node.id
@@ -380,7 +355,6 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
         const prompt = nodeData.config?.prompt || 'A beautiful landscape';
         addExecutionLog(`Generating image with prompt: "${prompt}"`, "info", node.id, nodeName);
         
-        // Use the ReplicateService which now uses the edge function
         const replicateService = new ReplicateService('');
         const generationResult = await replicateService.generateImage(prompt);
         
@@ -392,7 +366,6 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
           const imageUrl = generationResult.output[0];
           result = { imageUrl, type: 'image' };
           
-          // Update the node's config with the generated image
           setNodes((nds) =>
             nds.map((n) =>
               n.id === node.id
@@ -418,14 +391,12 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
         result = { text: inputText, type: 'text' };
         addExecutionLog(`Input received: "${inputText}"`, "success", node.id, nodeName);
       } else if (nodeData.type === 'imageOutput') {
-        // Find connected input nodes
         const connectedEdges = edges.filter(edge => edge.target === node.id);
         
         if (connectedEdges.length > 0) {
           for (const edge of connectedEdges) {
             const sourceResult = nodeResults.get(edge.source);
             if (sourceResult && sourceResult.type === 'image') {
-              // Update the image output node with the received image
               setNodes((nds) =>
                 nds.map((n) =>
                   n.id === node.id
@@ -455,15 +426,12 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
           addExecutionLog("No image data received for output node", "warning", node.id, nodeName);
         }
       } else {
-        // Default execution for other node types
         await new Promise(resolve => setTimeout(resolve, 1000));
         addExecutionLog(`Node "${nodeName}" executed`, "success", node.id, nodeName);
       }
 
-      // Store the result
       nodeResults.set(node.id, result);
 
-      // Execute dependent nodes
       const dependentEdges = edges.filter(edge => edge.source === node.id);
       for (const edge of dependentEdges) {
         const dependentNode = nodes.find(n => n.id === edge.target);
@@ -477,7 +445,6 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
       addExecutionLog(`Node execution failed: ${error}`, "error", node.id, nodeName);
       throw error;
     } finally {
-      // Remove highlight from the node
       setNodes((nds) =>
         nds.map((n) =>
           n.id === node.id
@@ -505,7 +472,6 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     });
   };
 
-  // Transform nodes for PerformanceMetrics component
   const transformedNodes = nodes.map(node => ({
     id: node.id,
     data: {

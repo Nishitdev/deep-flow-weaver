@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { 
@@ -40,25 +41,40 @@ const iconMap = {
 const getNodeStyles = (type: string) => {
   switch (type) {
     case 'trigger':
-      return 'node-trigger';
+      return 'bg-gradient-to-br from-violet-500/10 to-purple-600/10 border-violet-500/30 shadow-lg shadow-violet-500/10';
     case 'input':
-      return 'node-input bg-gradient-to-br from-red-500/20 to-orange-600/20 border-red-500/30';
+      return 'bg-gradient-to-br from-blue-500/10 to-cyan-600/10 border-blue-500/30 shadow-lg shadow-blue-500/10';
     case 'output':
-      return 'node-output bg-gradient-to-br from-green-500/20 to-emerald-600/20 border-green-500/30';
+      return 'bg-gradient-to-br from-green-500/10 to-emerald-600/10 border-green-500/30 shadow-lg shadow-green-500/10';
     case 'numberInput':
-      return 'node-input bg-gradient-to-br from-green-500/20 to-green-600/20 border-green-500/30';
+      return 'bg-gradient-to-br from-amber-500/10 to-orange-600/10 border-amber-500/30 shadow-lg shadow-amber-500/10';
     case 'imageInput':
-      return 'node-input bg-gradient-to-br from-blue-500/20 to-blue-600/20 border-blue-500/30';
+      return 'bg-gradient-to-br from-indigo-500/10 to-blue-600/10 border-indigo-500/30 shadow-lg shadow-indigo-500/10';
     case 'toggleInput':
-      return 'node-input bg-gradient-to-br from-purple-500/20 to-purple-600/20 border-purple-500/30';
+      return 'bg-gradient-to-br from-purple-500/10 to-pink-600/10 border-purple-500/30 shadow-lg shadow-purple-500/10';
     case 'sliderInput':
-      return 'node-input bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 border-cyan-500/30';
+      return 'bg-gradient-to-br from-cyan-500/10 to-teal-600/10 border-cyan-500/30 shadow-lg shadow-cyan-500/10';
     case 'fluxSchnell':
-      return 'node-input bg-gradient-to-br from-purple-500/20 to-pink-600/20 border-purple-500/30';
+      return 'bg-gradient-to-br from-rose-500/10 to-pink-600/10 border-rose-500/30 shadow-lg shadow-rose-500/10';
     case 'imageOutput':
-      return 'node-input bg-gradient-to-br from-purple-500/20 to-pink-600/20 border-purple-500/30';
+      return 'bg-gradient-to-br from-emerald-500/10 to-green-600/10 border-emerald-500/30 shadow-lg shadow-emerald-500/10';
     default:
-      return '';
+      return 'bg-gradient-to-br from-gray-500/10 to-slate-600/10 border-gray-500/30 shadow-lg shadow-gray-500/10';
+  }
+};
+
+const getIconColor = (type: string) => {
+  switch (type) {
+    case 'trigger': return 'text-violet-500';
+    case 'input': return 'text-blue-500';
+    case 'output': return 'text-green-500';
+    case 'numberInput': return 'text-amber-500';
+    case 'imageInput': return 'text-indigo-500';
+    case 'toggleInput': return 'text-purple-500';
+    case 'sliderInput': return 'text-cyan-500';
+    case 'fluxSchnell': return 'text-rose-500';
+    case 'imageOutput': return 'text-emerald-500';
+    default: return 'text-gray-500';
   }
 };
 
@@ -167,29 +183,29 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
 
     if (nodeData.type === 'input') {
       return (
-        <div className="w-full space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-red-500/30 flex items-center justify-center">
-              <IconComponent className="w-4 h-4 text-red-400" />
+        <div className="w-full space-y-4">
+          <div className="flex items-center gap-3 pb-3 border-b border-border/50">
+            <div className={cn("flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center", getNodeStyles(nodeData.type))}>
+              <IconComponent className={cn("w-5 h-5", getIconColor(nodeData.type))} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm text-foreground">
+              <h3 className="font-semibold text-base text-foreground">
                 {nodeData.label}
               </h3>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {nodeData.description}
               </p>
             </div>
           </div>
           
-          <div className="space-y-2">
-            <label className="text-xs text-muted-foreground">Text Input</label>
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-foreground">Text Input</label>
             <Textarea
               value={inputValue}
               onChange={(e) => handleInputChange(e.target.value)}
               placeholder="Enter your text here..."
-              className="w-full min-h-[80px] bg-background/50 border-border/50 text-sm resize-none"
-              rows={3}
+              className="w-full min-h-[100px] bg-background/80 border-border/70 text-sm resize-none focus:border-primary/50 transition-colors"
+              rows={4}
             />
           </div>
         </div>
@@ -198,28 +214,28 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
 
     if (nodeData.type === 'numberInput') {
       return (
-        <div className="w-full space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-green-500/30 flex items-center justify-center">
-              <Hash className="w-4 h-4 text-green-400" />
+        <div className="w-full space-y-4">
+          <div className="flex items-center gap-3 pb-3 border-b border-border/50">
+            <div className={cn("flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center", getNodeStyles(nodeData.type))}>
+              <Hash className={cn("w-5 h-5", getIconColor(nodeData.type))} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm text-foreground">
+              <h3 className="font-semibold text-base text-foreground">
                 {nodeData.label}
               </h3>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 A numeric input field
               </p>
             </div>
           </div>
           
-          <div className="space-y-2">
-            <label className="text-xs text-muted-foreground">Number Input</label>
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-foreground">Number Input</label>
             <Input
               type="number"
               value={numberValue}
               onChange={(e) => handleNumberChange(Number(e.target.value))}
-              className="w-full bg-background/50 border-border/50 text-sm"
+              className="w-full bg-background/80 border-border/70 text-sm focus:border-primary/50 transition-colors"
               min={nodeData.config?.min || 0}
               max={nodeData.config?.max || 100}
             />
@@ -232,27 +248,27 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
       const previewUrl = uploadType === 'url' ? imageUrl : (imageFile ? URL.createObjectURL(imageFile) : '');
       
       return (
-        <div className="w-full space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-500/30 flex items-center justify-center">
-              <Image className="w-4 h-4 text-blue-400" />
+        <div className="w-full space-y-4">
+          <div className="flex items-center gap-3 pb-3 border-b border-border/50">
+            <div className={cn("flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center", getNodeStyles(nodeData.type))}>
+              <Image className={cn("w-5 h-5", getIconColor(nodeData.type))} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm text-foreground">
+              <h3 className="font-semibold text-base text-foreground">
                 {nodeData.label}
               </h3>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Upload or provide an image
               </p>
             </div>
           </div>
           
-          <div className="space-y-2">
-            <div className="flex gap-1">
+          <div className="space-y-3">
+            <div className="flex gap-2">
               <Button
                 variant={uploadType === 'url' ? 'default' : 'outline'}
                 size="sm"
-                className="flex-1 text-xs"
+                className="flex-1 text-sm"
                 onClick={() => handleUploadTypeChange('url')}
               >
                 URL
@@ -260,7 +276,7 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
               <Button
                 variant={uploadType === 'file' ? 'default' : 'outline'}
                 size="sm"
-                className="flex-1 text-xs"
+                className="flex-1 text-sm"
                 onClick={() => handleUploadTypeChange('file')}
               >
                 Upload
@@ -269,25 +285,25 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
             
             {uploadType === 'url' ? (
               <>
-                <label className="text-xs text-muted-foreground">Image URL</label>
+                <label className="text-sm font-medium text-foreground">Image URL</label>
                 <Input
                   value={imageUrl}
                   onChange={(e) => handleImageUrlChange(e.target.value)}
                   placeholder="https://..."
-                  className="w-full bg-background/50 border-border/50 text-sm"
+                  className="w-full bg-background/80 border-border/70 text-sm focus:border-primary/50 transition-colors"
                 />
               </>
             ) : (
               <>
-                <label className="text-xs text-muted-foreground">Upload File</label>
+                <label className="text-sm font-medium text-foreground">Upload File</label>
                 <Input
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleImageFileChange(e.target.files?.[0] || null)}
-                  className="w-full bg-background/50 border-border/50 text-sm"
+                  className="w-full bg-background/80 border-border/70 text-sm focus:border-primary/50 transition-colors"
                 />
                 {imageFile && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     {imageFile.name}
                   </p>
                 )}
@@ -295,8 +311,8 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
             )}
             
             {previewUrl && (
-              <div className="mt-2 p-2 bg-background/30 border border-border/30 rounded-lg">
-                <img src={previewUrl} alt="Preview" className="max-h-20 object-contain w-full" />
+              <div className="mt-3 p-3 bg-background/50 border border-border/50 rounded-lg">
+                <img src={previewUrl} alt="Preview" className="max-h-24 object-contain w-full rounded" />
               </div>
             )}
           </div>
@@ -306,30 +322,30 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
 
     if (nodeData.type === 'toggleInput') {
       return (
-        <div className="w-full space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-purple-500/30 flex items-center justify-center">
-              <ToggleLeft className="w-4 h-4 text-purple-400" />
+        <div className="w-full space-y-4">
+          <div className="flex items-center gap-3 pb-3 border-b border-border/50">
+            <div className={cn("flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center", getNodeStyles(nodeData.type))}>
+              <ToggleLeft className={cn("w-5 h-5", getIconColor(nodeData.type))} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm text-foreground">
+              <h3 className="font-semibold text-base text-foreground">
                 {nodeData.label}
               </h3>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Toggle between true and false
               </p>
             </div>
           </div>
           
-          <div className="space-y-2">
-            <label className="text-xs text-muted-foreground">Checkbox Input</label>
-            <div className="flex items-center gap-2 p-3 bg-background/30 border border-border/30 rounded-lg">
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-foreground">Toggle Input</label>
+            <div className="flex items-center gap-3 p-4 bg-background/50 border border-border/50 rounded-lg">
               <Switch
                 checked={toggleValue}
                 onCheckedChange={handleToggleChange}
               />
               <span className="text-sm text-foreground">
-                Toggle between true and false
+                {toggleValue ? 'True' : 'False'}
               </span>
             </div>
           </div>
@@ -339,27 +355,27 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
 
     if (nodeData.type === 'sliderInput') {
       return (
-        <div className="w-full space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-cyan-500/30 flex items-center justify-center">
-              <Sliders className="w-4 h-4 text-cyan-400" />
+        <div className="w-full space-y-4">
+          <div className="flex items-center gap-3 pb-3 border-b border-border/50">
+            <div className={cn("flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center", getNodeStyles(nodeData.type))}>
+              <Sliders className={cn("w-5 h-5", getIconColor(nodeData.type))} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm text-foreground">
+              <h3 className="font-semibold text-base text-foreground">
                 {nodeData.label}
               </h3>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Select a value using a slider
               </p>
             </div>
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <label className="text-xs text-muted-foreground">Slider Input</label>
-              <span className="text-sm font-medium">{sliderValue[0]}</span>
+              <label className="text-sm font-medium text-foreground">Slider Input</label>
+              <span className="text-sm font-medium text-primary">{sliderValue[0]}</span>
             </div>
-            <div className="p-3 bg-background/30 border border-border/30 rounded-lg">
+            <div className="p-4 bg-background/50 border border-border/50 rounded-lg">
               <Slider
                 value={sliderValue}
                 onValueChange={handleSliderChange}
@@ -368,7 +384,7 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
                 step={1}
                 className="w-full"
               />
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+              <div className="flex justify-between text-xs text-muted-foreground mt-2">
                 <span>{nodeData.config?.min || 0}</span>
                 <span>{nodeData.config?.max || 100}</span>
               </div>
@@ -380,20 +396,23 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
 
     if (nodeData.type === 'output') {
       return (
-        <div className="w-full space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-green-500/30 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4 text-green-400" />
+        <div className="w-full space-y-4">
+          <div className="flex items-center gap-3 pb-3 border-b border-border/50">
+            <div className={cn("flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center", getNodeStyles(nodeData.type))}>
+              <CheckCircle2 className={cn("w-5 h-5", getIconColor(nodeData.type))} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm text-foreground">
+              <h3 className="font-semibold text-base text-foreground">
                 {nodeData.label}
               </h3>
+              <p className="text-sm text-muted-foreground">
+                Output display
+              </p>
             </div>
           </div>
           
-          <div className="space-y-2">
-            <div className="p-3 bg-background/30 border border-border/30 rounded-lg min-h-[60px]">
+          <div className="space-y-3">
+            <div className="p-4 bg-background/50 border border-border/50 rounded-lg min-h-[80px] flex items-center">
               <p className="text-sm text-foreground">
                 {nodeData.config?.outputText || 'Output will appear here...'}
               </p>
@@ -405,16 +424,16 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
 
     // Default trigger node
     return (
-      <div className="flex items-center gap-3">
-        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-          <IconComponent className="w-5 h-5 text-primary" />
+      <div className="flex items-center gap-4 p-2">
+        <div className={cn("flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center", getNodeStyles(nodeData.type))}>
+          <IconComponent className={cn("w-6 h-6", getIconColor(nodeData.type))} />
         </div>
         
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-sm text-foreground truncate">
+          <h3 className="font-semibold text-base text-foreground truncate">
             {nodeData.label}
           </h3>
-          <p className="text-xs text-muted-foreground truncate">
+          <p className="text-sm text-muted-foreground truncate">
             {nodeData.description}
           </p>
         </div>
@@ -431,11 +450,11 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
       case 'sliderInput':
       case 'fluxSchnell':
       case 'imageOutput':
-        return 'min-w-[320px]';
+        return 'min-w-[380px]';
       case 'output':
-        return 'min-w-[250px]';
+        return 'min-w-[300px]';
       default:
-        return 'min-w-[200px]';
+        return 'min-w-[250px]';
     }
   };
 
@@ -443,16 +462,17 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
     <ContextMenu>
       <ContextMenuTrigger>
         <div className={cn(
-          'workflow-node p-4',
+          'workflow-node p-5 rounded-xl border-2 backdrop-blur-sm bg-card/80 transition-all duration-200',
           getNodeWidth(),
           getNodeStyles(nodeData.type),
-          selected && 'selected'
+          selected && 'ring-2 ring-primary/50 ring-offset-2 ring-offset-background',
+          'hover:shadow-xl hover:scale-[1.02]'
         )}>
           {nodeData.type !== 'trigger' && (
             <Handle
               type="target"
               position={Position.Left}
-              className="!w-3 !h-3 !border-2"
+              className="!w-4 !h-4 !border-2 !border-primary/50 !bg-background hover:!border-primary transition-colors"
             />
           )}
           
@@ -461,7 +481,7 @@ export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
           <Handle
             type="source"
             position={Position.Right}
-            className="!w-3 !h-3 !border-2"
+            className="!w-4 !h-4 !border-2 !border-primary/50 !bg-background hover:!border-primary transition-colors"
           />
         </div>
       </ContextMenuTrigger>
