@@ -68,8 +68,8 @@ export const useWorkflows = () => {
         id: item.id,
         name: item.name,
         description: item.description,
-        nodes: item.nodes as Node[],
-        edges: item.edges as Edge[],
+        nodes: (item.nodes as unknown) as Node[],
+        edges: (item.edges as unknown) as Edge[],
         created_at: item.created_at,
         updated_at: item.updated_at,
       }));
