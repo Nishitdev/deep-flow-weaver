@@ -14,6 +14,7 @@ import {
   Zap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { WorkflowNodeData } from '@/types/workflow';
 
 const iconMap = {
   play: Play,
@@ -43,7 +44,7 @@ const getNodeStyles = (type: string) => {
   }
 };
 
-export const WorkflowNode: React.FC<NodeProps> = ({ data, selected }) => {
+export const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({ data, selected }) => {
   const IconComponent = iconMap[data.icon as keyof typeof iconMap] || Play;
   
   return (

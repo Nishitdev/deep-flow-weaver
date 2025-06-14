@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from 'react';
 import {
   ReactFlow,
@@ -21,12 +20,13 @@ import { NodeConfigPanel } from './NodeConfigPanel';
 import { Play, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { WorkflowNodeData } from '@/types/workflow';
 
 const nodeTypes = {
   workflowNode: WorkflowNode,
 };
 
-const initialNodes: Node[] = [
+const initialNodes: Node<WorkflowNodeData>[] = [
   {
     id: '1',
     type: 'workflowNode',
@@ -46,7 +46,7 @@ const initialEdges: Edge[] = [];
 export const WorkflowBuilder: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [selectedNode, setSelectedNode] = useState<Node<WorkflowNodeData> | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -55,16 +55,22 @@ export const WorkflowBuilder: React.FC = () => {
     [setEdges]
   );
 
-  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node<WorkflowNodeData>) => {
     setSelectedNode(node);
   }, []);
 
-  const addNode = useCallback((nodeData: any) => {
-    const newNode: Node = {
+  const addNode = useCallback((nodeData: Partial<WorkflowNodeData>) => {
+    const newNode: Node<WorkflowNodeData> = {
       id: `${nodes.length + 1}`,
       type: 'workflowNode',
       position: { x: Math.random() * 400 + 200, y: Math.random() * 400 + 200 },
-      data: nodeData,
+      data: {
+        type: nodeData.type || 'default',
+        label: nodeData.label || 'New Node',
+        icon: nodeData.icon || 'play',
+        description: nodeData.description || 'Description',
+        config: nodeData.config || {},
+      },
     };
     setNodes((nds) => [...nds, newNode]);
   }, [nodes.length, setNodes]);

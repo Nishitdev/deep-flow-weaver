@@ -17,11 +17,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { WorkflowNodeData } from '@/types/workflow';
 
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
-  onAddNode: (nodeData: any) => void;
+  onAddNode: (nodeData: Partial<WorkflowNodeData>) => void;
 }
 
 const nodeCategories = [
@@ -33,18 +34,21 @@ const nodeCategories = [
         label: 'Manual Trigger',
         icon: 'play',
         description: 'Start workflow manually',
+        config: {},
       },
       {
         type: 'trigger',
         label: 'Webhook',
         icon: 'webhook',
         description: 'Trigger via HTTP request',
+        config: {},
       },
       {
         type: 'trigger',
         label: 'Schedule',
         icon: 'calendar',
         description: 'Run on schedule',
+        config: {},
       },
     ],
   },
@@ -56,18 +60,21 @@ const nodeCategories = [
         label: 'OpenAI GPT',
         icon: 'brain',
         description: 'Generate text with GPT',
+        config: {},
       },
       {
         type: 'ai',
         label: 'Claude AI',
         icon: 'brain',
         description: 'Process with Claude',
+        config: {},
       },
       {
         type: 'ai',
         label: 'Image Analysis',
         icon: 'image',
         description: 'Analyze images with AI',
+        config: {},
       },
     ],
   },
@@ -79,18 +86,21 @@ const nodeCategories = [
         label: 'Filter',
         icon: 'filter',
         description: 'Filter data by conditions',
+        config: {},
       },
       {
         type: 'data',
         label: 'Transform',
         icon: 'database',
         description: 'Transform data structure',
+        config: {},
       },
       {
         type: 'data',
         label: 'Extract Text',
         icon: 'fileText',
         description: 'Extract text from files',
+        config: {},
       },
     ],
   },
@@ -102,12 +112,14 @@ const nodeCategories = [
         label: 'Send Email',
         icon: 'mail',
         description: 'Send email notification',
+        config: {},
       },
       {
         type: 'output',
         label: 'Save to Database',
         icon: 'database',
         description: 'Store data in database',
+        config: {},
       },
     ],
   },
@@ -173,7 +185,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, onAddNode })
 };
 
 interface NodeCardProps {
-  node: any;
+  node: Partial<WorkflowNodeData>;
   onAdd: () => void;
 }
 

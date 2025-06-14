@@ -8,11 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { WorkflowNodeData, NodeConfig } from '@/types/workflow';
 
 interface NodeConfigPanelProps {
-  node: Node;
+  node: Node<WorkflowNodeData>;
   onClose: () => void;
-  onUpdate: (node: Node) => void;
+  onUpdate: (node: Node<WorkflowNodeData>) => void;
 }
 
 export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
@@ -20,9 +21,9 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
   onClose,
   onUpdate,
 }) => {
-  const [config, setConfig] = useState(node.data.config || {});
-  const [label, setLabel] = useState(node.data.label || '');
-  const [description, setDescription] = useState(node.data.description || '');
+  const [config, setConfig] = useState<NodeConfig>(node.data.config || {});
+  const [label, setLabel] = useState<string>(node.data.label || '');
+  const [description, setDescription] = useState<string>(node.data.description || '');
 
   const handleSave = () => {
     const updatedNode = {
