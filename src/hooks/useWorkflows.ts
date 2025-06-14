@@ -26,8 +26,8 @@ export const useWorkflows = () => {
         .insert({
           name,
           description,
-          nodes,
-          edges,
+          nodes: nodes as any,
+          edges: edges as any,
         })
         .select()
         .single();
@@ -63,8 +63,19 @@ export const useWorkflows = () => {
 
       if (error) throw error;
 
-      setWorkflows(data || []);
-      return data;
+      // Transform the data to match our Workflow interface
+      const transformedData: Workflow[] = (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        nodes: item.nodes as Node[],
+        edges: item.edges as Edge[],
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+      }));
+
+      setWorkflows(transformedData);
+      return transformedData;
     } catch (error) {
       console.error('Error loading workflows:', error);
       toast({
