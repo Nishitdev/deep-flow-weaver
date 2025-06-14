@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, StepForward, Square, Bug, Breakpoint } from 'lucide-react';
+import { Play, Pause, StepForward, Square, Bug, Circle } from 'lucide-react';
 import { Node, Edge } from '@xyflow/react';
 
 interface DebugModeProps {
@@ -50,7 +50,7 @@ export const DebugMode: React.FC<DebugModeProps> = ({
     setDebugLogs([]);
     if (nodes.length > 0) {
       onNodeHighlight(nodes[0].id);
-      addDebugLog(nodes[0].id, nodes[0].data?.label || 'Node', 'Debug started');
+      addDebugLog(nodes[0].id, (nodes[0].data?.label as string) || 'Node', 'Debug started');
     }
   };
 
@@ -67,7 +67,7 @@ export const DebugMode: React.FC<DebugModeProps> = ({
       setCurrentNodeIndex(nextIndex);
       const nextNode = nodes[nextIndex];
       onNodeHighlight(nextNode.id);
-      addDebugLog(nextNode.id, nextNode.data?.label || 'Node', `Executing step ${nextIndex + 1}`);
+      addDebugLog(nextNode.id, (nextNode.data?.label as string) || 'Node', `Executing step ${nextIndex + 1}`);
     } else {
       stopDebug();
     }
@@ -96,7 +96,7 @@ export const DebugMode: React.FC<DebugModeProps> = ({
       } else {
         return [...prev, {
           id: nodeId,
-          name: node.data?.label || 'Node',
+          name: (node.data?.label as string) || 'Node',
           enabled: true,
         }];
       }
@@ -160,7 +160,7 @@ export const DebugMode: React.FC<DebugModeProps> = ({
               <div className="p-3 border border-border rounded-lg bg-primary/10">
                 <h4 className="font-medium text-sm mb-2">Current Node</h4>
                 <div className="text-sm">
-                  <div className="font-medium">{nodes[currentNodeIndex].data?.label}</div>
+                  <div className="font-medium">{(nodes[currentNodeIndex].data?.label as string) || 'Node'}</div>
                   <div className="text-muted-foreground">Step {currentNodeIndex + 1} of {nodes.length}</div>
                 </div>
               </div>
@@ -174,14 +174,14 @@ export const DebugMode: React.FC<DebugModeProps> = ({
                   const breakpoint = breakpoints.find(bp => bp.id === node.id);
                   return (
                     <div key={node.id} className="flex items-center justify-between p-2 border border-border rounded text-sm">
-                      <span>{node.data?.label || 'Node'}</span>
+                      <span>{(node.data?.label as string) || 'Node'}</span>
                       <Button
                         size="sm"
                         variant={breakpoint?.enabled ? "default" : "outline"}
                         onClick={() => toggleBreakpoint(node.id)}
                         className="h-6 px-2"
                       >
-                        <Breakpoint className="w-3 h-3" />
+                        <Circle className="w-3 h-3" />
                       </Button>
                     </div>
                   );
