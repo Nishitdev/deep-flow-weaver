@@ -175,83 +175,28 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     setExecutionLogs([]);
   };
 
-  // Persist workflow changes (nodes, edges) on every edit (including delete)
-  const persistWorkflow = useCallback(
-    async (newNodes: Node[], newEdges: Edge[]) => {
-      if (!currentWorkflowId) return;
-      try {
-        await updateWorkflow(currentWorkflowId, {
-          nodes: newNodes,
-          edges: newEdges,
-        });
-      } catch (error) {
-        toast({
-          title: "Persistence Failed",
-          description: "An error occurred while saving the workflow.",
-          variant: "destructive",
-        });
-      }
-    },
-    [currentWorkflowId, updateWorkflow]
-  );
-
-  // Hook into node/edge changes to persist
-  const onNodesChangePersist = useCallback((changes) => {
-    setNodes((nds) => {
-      const updatedNodes = nds.map((node) =>
-        changes.some((c: any) => c.id === node.id) ? { ...node, ...c } : node
-      );
-      persistWorkflow(updatedNodes, edges);
-      return updatedNodes;
-    });
-  }, [setNodes, persistWorkflow, edges]);
-
-  const onEdgesChangePersist = useCallback((changes) => {
-    setEdges((eds) => {
-      const updatedEdges = eds.map((edge) =>
-        changes.some((c: any) => c.id === edge.id) ? { ...edge, ...c } : edge
-      );
-      persistWorkflow(nodes, updatedEdges);
-      return updatedEdges;
-    });
-  }, [setEdges, persistWorkflow, nodes]);
-
-  // Handle node delete: remove, persist
-  const deleteNode = useCallback((nodeId: string) => {
-    setNodes((nds) => {
-      const filtered = nds.filter((node) => node.id !== nodeId);
-      persistWorkflow(filtered, edges);
-      return filtered;
-    });
-    setEdges((eds) => {
-      const filtered = eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId);
-      persistWorkflow(nodes, filtered);
-      return filtered;
-    });
-
-    if (selectedNode?.id === nodeId) setSelectedNode(null);
-
-    toast({
-      title: "Node Deleted",
-      description: "Node and its connections have been removed and saved.",
-    });
-  }, [setNodes, setEdges, persistWorkflow, selectedNode, edges, nodes]);
-
-  // Update onConnect (add edge), persist
   const onConnect = useCallback(
-    (params: Connection) => {
-      setEdges((eds) => {
-        const newEdges = addEdge({ ...params, animated: true }, eds);
-        persistWorkflow(nodes, newEdges);
-        return newEdges;
-      });
-    },
-    [setEdges, persistWorkflow, nodes]
+    (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
+    [setEdges]
   );
 
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
   }, []);
+
+  const deleteNode = useCallback((nodeId: string) => {
+    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+    
+    if (selectedNode?.id === nodeId) {
+      setSelectedNode(null);
+    }
+    
+    toast({
+      title: "Node Deleted",
+      description: "Node and its connections have been removed successfully.",
+    });
+  }, [setNodes, setEdges, selectedNode]);
 
   const deleteSelectedNodes = useCallback(() => {
     const selectedNodes = nodes.filter(node => node.selected);
@@ -569,17 +514,12 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     },
   }));
 
-  // Use the persist-aware handlers
   return (
     <div className="flex h-screen bg-background text-foreground">
       <Sidebar 
         isOpen={sidebarOpen} 
         onToggle={() => setSidebarOpen(!sidebarOpen)}
-        onAddNode={(data) => {
-          // Add node and persist immediately
-          addNode(data);
-          setTimeout(() => persistWorkflow([...nodes, data], edges), 0);
-        }} 
+        onAddNode={addNode} 
       />
       
       <div className="flex-1 flex flex-col">
@@ -654,8 +594,8 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
               className: node.id === highlightedNodeId ? 'node-highlighted' : undefined,
             }))}
             edges={edges}
-            onNodesChange={onNodesChangePersist}
-            onEdgesChange={onEdgesChangePersist}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onNodeClick={onNodeClick}
             onDragOver={onDragOver}
