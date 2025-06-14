@@ -530,6 +530,8 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
         open={showPerformanceMetrics}
         onOpenChange={setShowPerformanceMetrics}
         workflowId={initialWorkflow?.id}
+        executionLogs={executionLogs}
+        nodes={nodes}
       />
 
       <DebugMode
@@ -538,6 +540,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
         nodes={nodes}
         edges={edges}
         onNodeHighlight={setHighlightedNodeId}
+        executionLogs={executionLogs}
       />
     </div>
   );
