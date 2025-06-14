@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Play, 
@@ -6,7 +5,8 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Plus
+  Plus,
+  Code
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -42,6 +42,18 @@ const nodeCategories = [
         icon: 'checkCircle',
         description: 'Display output results',
         config: { outputText: '' },
+      },
+    ],
+  },
+  {
+    title: 'Developer Nodes',
+    nodes: [
+      {
+        type: 'customCode',
+        label: 'Custom Code',
+        icon: 'code',
+        description: 'Execute JavaScript/Python code',
+        config: { code: '// Write your code here\nconsole.log("Hello World");', language: 'javascript' },
       },
     ],
   },
@@ -112,6 +124,7 @@ const iconMap = {
   play: Play,
   fileInput: FileInput,
   checkCircle: CheckCircle2,
+  code: Code,
 };
 
 const NodeCard: React.FC<NodeCardProps> = ({ node, onAdd }) => {

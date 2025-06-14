@@ -25,9 +25,14 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { WorkflowNodeData } from '@/types/workflow';
 import { Workflow, useWorkflows } from '@/hooks/useWorkflows';
+import { ExecutionHistory } from './ExecutionHistory';
+import { PerformanceMetrics } from './PerformanceMetrics';
+import { DebugMode } from './DebugMode';
+import { CustomCodeNode } from './CustomCodeNode';
 
 const nodeTypes = {
   workflowNode: WorkflowNode,
+  customCode: CustomCodeNode,
 };
 
 const initialNodes: Node[] = [];
@@ -46,6 +51,10 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showLoadDialog, setShowLoadDialog] = useState(false);
   const [showLogsDialog, setShowLogsDialog] = useState(false);
+  const [showExecutionHistory, setShowExecutionHistory] = useState(false);
+  const [showPerformanceMetrics, setShowPerformanceMetrics] = useState(false);
+  const [showDebugMode, setShowDebugMode] = useState(false);
+  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
   const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
   const { updateWorkflow } = useWorkflows();
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -271,6 +280,24 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
               Logs
             </Button>
             <Button
+              onClick={() => setShowExecutionHistory(true)}
+              variant="outline"
+            >
+              History
+            </Button>
+            <Button
+              onClick={() => setShowPerformanceMetrics(true)}
+              variant="outline"
+            >
+              Metrics
+            </Button>
+            <Button
+              onClick={() => setShowDebugMode(true)}
+              variant="outline"
+            >
+              Debug
+            </Button>
+            <Button
               onClick={executeWorkflow}
               disabled={isExecuting}
               className="bg-green-600 hover:bg-green-700"
@@ -293,7 +320,10 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
 
         <div className="flex-1 relative">
           <ReactFlow
-            nodes={nodes}
+            nodes={nodes.map(node => ({
+              ...node,
+              className: node.id === highlightedNodeId ? 'node-highlighted' : undefined,
+            }))}
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
@@ -312,7 +342,26 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
             <Controls className="glassmorphism" />
             <MiniMap 
               className="glassmorphism"
-              nodeColor="#6366f1"
+              nodeColor={(node) => {
+                switch (node.type) {
+                  case 'customCode':
+                    return '#8b5cf6';
+                  case 'workflowNode':
+                    const nodeData = node.data as any;
+                    switch (nodeData?.type) {
+                      case 'input':
+                        return '#ef4444';
+                      case 'output':
+                        return '#10b981';
+                      case 'trigger':
+                        return '#06b6d4';
+                      default:
+                        return '#6366f1';
+                    }
+                  default:
+                    return '#6366f1';
+                }
+              }}
               maskColor="rgba(0, 0, 0, 0.8)"
             />
           </ReactFlow>
@@ -351,6 +400,26 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
         open={showLogsDialog}
         onOpenChange={setShowLogsDialog}
         workflowId={initialWorkflow?.id}
+      />
+
+      <ExecutionHistory
+        open={showExecutionHistory}
+        onOpenChange={setShowExecutionHistory}
+        workflowId={initialWorkflow?.id}
+      />
+
+      <PerformanceMetrics
+        open={showPerformanceMetrics}
+        onOpenChange={setShowPerformanceMetrics}
+        workflowId={initialWorkflow?.id}
+      />
+
+      <DebugMode
+        open={showDebugMode}
+        onOpenChange={setShowDebugMode}
+        nodes={nodes}
+        edges={edges}
+        onNodeHighlight={setHighlightedNodeId}
       />
     </div>
   );
