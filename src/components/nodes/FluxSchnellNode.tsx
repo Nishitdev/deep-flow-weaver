@@ -37,21 +37,9 @@ export const FluxSchnellNode: React.FC<FluxSchnellNodeProps> = ({ data }) => {
   };
 
   const handleGenerate = async () => {
-    const apiKey = localStorage.getItem('replicate_api_key');
-    
     console.log('Generate button clicked');
-    console.log('API key present:', !!apiKey);
     console.log('Prompt:', prompt);
     
-    if (!apiKey) {
-      toast({
-        title: "API Key Required",
-        description: "Please set your Replicate API key in settings first.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!prompt.trim()) {
       toast({
         title: "Prompt Required",
@@ -70,7 +58,8 @@ export const FluxSchnellNode: React.FC<FluxSchnellNodeProps> = ({ data }) => {
     
     try {
       console.log('Creating Replicate service...');
-      const replicateService = new ReplicateService(apiKey);
+      // We don't need an API key anymore since the edge function handles it
+      const replicateService = new ReplicateService('');
       
       console.log('Calling generateImage...');
       const result = await replicateService.generateImage(prompt);

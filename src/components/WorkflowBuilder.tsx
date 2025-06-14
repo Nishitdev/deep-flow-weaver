@@ -377,16 +377,11 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
       let result = null;
 
       if (nodeData.type === 'fluxSchnell') {
-        const apiKey = localStorage.getItem('replicate_api_key');
-        
-        if (!apiKey) {
-          throw new Error('Replicate API key not found. Please set it in settings.');
-        }
-
         const prompt = nodeData.config?.prompt || 'A beautiful landscape';
         addExecutionLog(`Generating image with prompt: "${prompt}"`, "info", node.id, nodeName);
         
-        const replicateService = new ReplicateService(apiKey);
+        // Use the ReplicateService which now uses the edge function
+        const replicateService = new ReplicateService('');
         const generationResult = await replicateService.generateImage(prompt);
         
         if (generationResult.error) {
@@ -440,6 +435,7 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
                           ...nodeData,
                           config: {
                             ...nodeData.config,
+                            displayImageUrl: sourceResult.imageUrl,
                             imageUrl: sourceResult.imageUrl,
                             uploadType: 'url'
                           }
@@ -451,6 +447,7 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
               );
               
               addExecutionLog(`Image displayed in output node: ${sourceResult.imageUrl}`, "success", node.id, nodeName);
+              result = sourceResult;
               break;
             }
           }
