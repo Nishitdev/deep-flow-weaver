@@ -13,6 +13,7 @@ import {
   BackgroundVariant,
   useReactFlow,
   ReactFlowProvider,
+  SelectionMode,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { WorkflowNode } from './WorkflowNode';
@@ -84,6 +85,24 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
       });
     }
   }, [initialWorkflow, setNodes, setEdges]);
+
+  // Keyboard shortcut for deleting selected nodes
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        const selectedNodes = nodes.filter(node => node.selected);
+        if (selectedNodes.length > 0) {
+          event.preventDefault();
+          deleteSelectedNodes();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [nodes]);
 
   // Auto-save workflow changes
   const autoSaveWorkflow = useCallback(async (nodesToSave: Node[], edgesToSave: Edge[]) => {
@@ -176,6 +195,27 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
       description: "Node and its connections have been removed successfully.",
     });
   }, [setNodes, setEdges, selectedNode]);
+
+  const deleteSelectedNodes = useCallback(() => {
+    const selectedNodes = nodes.filter(node => node.selected);
+    if (selectedNodes.length === 0) return;
+
+    const selectedNodeIds = selectedNodes.map(node => node.id);
+    
+    setNodes((nds) => nds.filter((node) => !selectedNodeIds.includes(node.id)));
+    setEdges((eds) => eds.filter((edge) => 
+      !selectedNodeIds.includes(edge.source) && !selectedNodeIds.includes(edge.target)
+    ));
+    
+    if (selectedNode && selectedNodeIds.includes(selectedNode.id)) {
+      setSelectedNode(null);
+    }
+    
+    toast({
+      title: "Nodes Deleted",
+      description: `${selectedNodes.length} node(s) and their connections have been removed successfully.`,
+    });
+  }, [nodes, setNodes, setEdges, selectedNode]);
 
   const addNode = useCallback((nodeData: Partial<WorkflowNodeData>, position?: { x: number; y: number }) => {
     const newNode: Node = {
@@ -479,6 +519,11 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
             nodeTypes={nodeTypes}
             className="workflow-canvas"
             fitView
+            selectionMode={SelectionMode.Partial}
+            multiSelectionKeyCode={null}
+            selectionKeyCode={null}
+            panOnDrag={[1, 2]}
+            selectNodesOnDrag={false}
           >
             <Background 
               variant={BackgroundVariant.Dots} 
