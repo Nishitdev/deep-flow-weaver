@@ -606,7 +606,7 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
             selectionMode={SelectionMode.Partial}
             multiSelectionKeyCode={null}
             selectionKeyCode={null}
-            panOnDrag={[1, 2]}
+            panOnDrag={true}
             selectNodesOnDrag={false}
           >
             <Background 
