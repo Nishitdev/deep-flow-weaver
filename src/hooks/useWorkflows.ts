@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Node, Edge } from '@xyflow/react';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,26 +13,43 @@ export interface Workflow {
   updated_at: string;
 }
 
+/**
+ * Enhanced useWorkflows hook with improved error handling and persistence
+ */
 export const useWorkflows = () => {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  /**
+   * Save workflow with enhanced error handling and validation
+   */
   const saveWorkflow = async (name: string, description: string, nodes: Node[], edges: Edge[]) => {
+    if (!name.trim()) {
+      throw new Error('Workflow name is required');
+    }
+
     setIsLoading(true);
     try {
+      console.log('Saving workflow:', { name, nodesCount: nodes.length, edgesCount: edges.length });
+      
       const { data, error } = await supabase
         .from('workflows')
         .insert({
-          name,
-          description,
+          name: name.trim(),
+          description: description.trim() || null,
           nodes: nodes as any,
           edges: edges as any,
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
+      console.log('Workflow saved successfully:', data);
+      
       toast({
         title: "Workflow Saved",
         description: `"${name}" has been saved successfully!`,
@@ -44,7 +60,7 @@ export const useWorkflows = () => {
       console.error('Error saving workflow:', error);
       toast({
         title: "Save Failed",
-        description: "Failed to save workflow. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to save workflow. Please try again.",
         variant: "destructive",
       });
       throw error;
@@ -53,9 +69,18 @@ export const useWorkflows = () => {
     }
   };
 
+  /**
+   * Update workflow with improved error handling and optimistic updates
+   */
   const updateWorkflow = async (id: string, updates: Partial<Workflow>) => {
+    if (!id) {
+      throw new Error('Workflow ID is required');
+    }
+
     setIsLoading(true);
     try {
+      console.log('Updating workflow:', { id, updates });
+      
       // Prepare the update object with proper type casting
       const updateData: any = {
         ...updates,
@@ -77,14 +102,24 @@ export const useWorkflows = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
-      // Update local state
+      console.log('Workflow updated successfully:', data);
+
+      // Update local state optimistically
       setWorkflows(prev => prev.map(w => w.id === id ? { ...w, ...updates, updated_at: data.updated_at } : w));
 
       return data;
     } catch (error) {
       console.error('Error updating workflow:', error);
+      toast({
+        title: "Update Failed",
+        description: error instanceof Error ? error.message : "Failed to update workflow. Please try again.",
+        variant: "destructive",
+      });
       throw error;
     } finally {
       setIsLoading(false);

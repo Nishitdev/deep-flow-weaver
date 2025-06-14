@@ -58,8 +58,11 @@ const initialEdges: Edge[] = [];
 /**
  * WorkflowBuilderContent Component
  * 
- * Main content component for the workflow builder.
- * Handles all workflow operations, state management, and node execution.
+ * Enhanced main content component for the workflow builder.
+ * Features:
+ * - Improved auto-save mechanism with better error handling
+ * - Enhanced node persistence
+ * - Better state management and cleanup
  */
 const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflow }) => {
   // React Flow state
@@ -85,16 +88,19 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
   const [executionLogs, setExecutionLogs] = useState<LogEntry[]>([]);
   const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
 
-  // Hooks and refs
+  // Enhanced hooks and refs for better persistence
   const { updateWorkflow } = useWorkflows();
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSaveRef = useRef<{ nodes: Node[], edges: Edge[] } | null>(null);
 
   // Load initial workflow if provided
   useEffect(() => {
     if (initialWorkflow) {
+      console.log('Loading initial workflow:', initialWorkflow);
       setNodes(initialWorkflow.nodes);
       setEdges(initialWorkflow.edges);
       setCurrentWorkflowId(initialWorkflow.id);
+      lastSaveRef.current = { nodes: initialWorkflow.nodes, edges: initialWorkflow.edges };
       toast({
         title: "Workflow Loaded",
         description: `"${initialWorkflow.name}" has been loaded successfully!`,
@@ -102,14 +108,23 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     }
   }, [initialWorkflow, setNodes, setEdges]);
 
-  // Keyboard shortcut for deleting selected nodes
+  // Enhanced keyboard shortcut handling
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Delete selected nodes
       if (event.key === 'Delete' || event.key === 'Backspace') {
         const selectedNodes = nodes.filter(node => node.selected);
         if (selectedNodes.length > 0) {
           event.preventDefault();
           deleteSelectedNodes();
+        }
+      }
+      
+      // Ctrl+S to save (prevent browser save)
+      if (event.ctrlKey && event.key === 's') {
+        event.preventDefault();
+        if (currentWorkflowId) {
+          triggerAutoSave();
         }
       }
     };
@@ -118,24 +133,57 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [nodes]);
+  }, [nodes, currentWorkflowId]);
 
-  // Auto-save workflow changes
+  /**
+   * Enhanced auto-save workflow changes with better error handling and deduplication
+   */
   const autoSaveWorkflow = useCallback(async (nodesToSave: Node[], edgesToSave: Edge[]) => {
-    if (!currentWorkflowId) return;
+    if (!currentWorkflowId) {
+      console.log('No workflow ID available for auto-save');
+      return;
+    }
+
+    // Check if there are actual changes to save
+    const lastSave = lastSaveRef.current;
+    if (lastSave && 
+        JSON.stringify(lastSave.nodes) === JSON.stringify(nodesToSave) &&
+        JSON.stringify(lastSave.edges) === JSON.stringify(edgesToSave)) {
+      console.log('No changes detected, skipping auto-save');
+      return;
+    }
 
     try {
+      console.log('Auto-saving workflow changes...');
       await updateWorkflow(currentWorkflowId, {
         nodes: nodesToSave,
         edges: edgesToSave,
       });
+      
+      // Update the last save reference
+      lastSaveRef.current = { nodes: nodesToSave, edges: edgesToSave };
       console.log('Workflow auto-saved successfully');
     } catch (error) {
       console.error('Failed to auto-save workflow:', error);
+      toast({
+        title: "Auto-save Failed",
+        description: "Failed to save changes automatically. Please save manually.",
+        variant: "destructive",
+      });
     }
   }, [currentWorkflowId, updateWorkflow]);
 
-  // Debounced auto-save when nodes or edges change
+  /**
+   * Trigger immediate auto-save
+   */
+  const triggerAutoSave = useCallback(() => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    autoSaveWorkflow(nodes, edges);
+  }, [autoSaveWorkflow, nodes, edges]);
+
+  // Enhanced debounced auto-save when nodes or edges change
   useEffect(() => {
     if (!currentWorkflowId) return;
 
@@ -143,9 +191,10 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
       clearTimeout(autoSaveTimeoutRef.current);
     }
 
+    // Debounce auto-save by 2 seconds to avoid excessive saves
     autoSaveTimeoutRef.current = setTimeout(() => {
       autoSaveWorkflow(nodes, edges);
-    }, 1000);
+    }, 2000);
 
     return () => {
       if (autoSaveTimeoutRef.current) {
@@ -183,6 +232,7 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
   }, []);
 
   const deleteNode = useCallback((nodeId: string) => {
+    console.log('Deleting node:', nodeId);
     setNodes((nds) => nds.filter((node) => node.id !== nodeId));
     setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
     
@@ -201,6 +251,7 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
     if (selectedNodes.length === 0) return;
 
     const selectedNodeIds = selectedNodes.map(node => node.id);
+    console.log('Deleting selected nodes:', selectedNodeIds);
     
     setNodes((nds) => nds.filter((node) => !selectedNodeIds.includes(node.id)));
     setEdges((eds) => eds.filter((edge) => 
@@ -231,6 +282,7 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
         onDelete: deleteNode,
       },
     };
+    console.log('Adding new node:', newNode);
     setNodes((nds) => [...nds, newNode]);
   }, [setNodes, deleteNode]);
 
@@ -272,6 +324,7 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
   }, [deleteNode, setNodes]);
 
   const loadWorkflow = useCallback((loadedNodes: Node[], loadedEdges: Edge[]) => {
+    console.log('Loading workflow:', { nodesCount: loadedNodes.length, edgesCount: loadedEdges.length });
     setNodes(loadedNodes.map(node => ({
       ...node,
       data: {

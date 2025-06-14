@@ -8,6 +8,10 @@ import { NodeHeader } from './NodeHeader';
  * 
  * A simple trigger node that starts workflow execution manually.
  * This node type doesn't require any configuration or input.
+ * Features:
+ * - Clean, modern design with gradient backgrounds
+ * - Proper visual hierarchy
+ * - Consistent spacing and typography
  * 
  * @param data - Node configuration data
  * @param data.label - Display label for the node
@@ -22,7 +26,7 @@ interface TriggerNodeProps {
 
 export const TriggerNode: React.FC<TriggerNodeProps> = ({ data }) => {
   return (
-    <div className="flex items-center gap-4 p-2">
+    <div className="flex items-center gap-4 p-3">
       <NodeHeader
         icon={Play}
         label={data.label}
