@@ -32,6 +32,7 @@ import { ExecutionHistory } from './ExecutionHistory';
 import { PerformanceMetrics } from './PerformanceMetrics';
 import { DebugMode } from './DebugMode';
 import { CustomCodeNode } from './CustomCodeNode';
+import { SettingsDialog } from './SettingsDialog';
 
 const nodeTypes = {
   workflowNode: WorkflowNode,
@@ -442,6 +443,7 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({ initialWorkflo
       <div className="flex-1 flex flex-col">
         <WorkflowHeader>
           <div className="flex items-center gap-2">
+            <SettingsDialog />
             <Button
               onClick={() => setShowSaveDialog(true)}
               variant="outline"

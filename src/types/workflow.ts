@@ -12,6 +12,8 @@ export interface NodeConfig {
   sliderValue?: number;
   code?: string;
   language?: string;
+  prompt?: string;
+  generatedImageUrl?: string;
   [key: string]: any;
 }
 

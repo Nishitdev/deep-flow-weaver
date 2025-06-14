@@ -84,6 +84,18 @@ const nodeCategories = [
     ],
   },
   {
+    title: 'AI Nodes',
+    nodes: [
+      {
+        type: 'sdxl',
+        label: 'SDXL Generator',
+        icon: 'image',
+        description: 'Generate images with Flux Schnell',
+        config: { prompt: '', generatedImageUrl: '' },
+      },
+    ],
+  },
+  {
     title: 'Developer Nodes',
     nodes: [
       {
