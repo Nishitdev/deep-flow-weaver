@@ -14,7 +14,6 @@ import {
   Zap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { WorkflowNodeData } from '@/types/workflow';
 
 const iconMap = {
   play: Play,
@@ -44,13 +43,14 @@ const getNodeStyles = (type: string) => {
   }
 };
 
-export const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({ data, selected }) => {
-  const IconComponent = iconMap[data.icon as keyof typeof iconMap] || Play;
+export const WorkflowNode: React.FC<NodeProps> = ({ data, selected }) => {
+  const nodeData = data as any; // Type assertion to access our custom properties
+  const IconComponent = iconMap[nodeData.icon as keyof typeof iconMap] || Play;
   
   return (
     <div className={cn(
       'workflow-node min-w-[200px] p-4',
-      getNodeStyles(data.type),
+      getNodeStyles(nodeData.type),
       selected && 'selected'
     )}>
       <Handle
@@ -66,10 +66,10 @@ export const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({ data, sele
         
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-sm text-foreground truncate">
-            {data.label}
+            {nodeData.label}
           </h3>
           <p className="text-xs text-muted-foreground truncate">
-            {data.description}
+            {nodeData.description}
           </p>
         </div>
       </div>

@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState } from 'react';
 import {
   ReactFlow,
@@ -26,7 +27,7 @@ const nodeTypes = {
   workflowNode: WorkflowNode,
 };
 
-const initialNodes: Node<WorkflowNodeData>[] = [
+const initialNodes: Node[] = [
   {
     id: '1',
     type: 'workflowNode',
@@ -46,7 +47,7 @@ const initialEdges: Edge[] = [];
 export const WorkflowBuilder: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [selectedNode, setSelectedNode] = useState<Node<WorkflowNodeData> | null>(null);
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -55,12 +56,12 @@ export const WorkflowBuilder: React.FC = () => {
     [setEdges]
   );
 
-  const onNodeClick = useCallback((event: React.MouseEvent, node: Node<WorkflowNodeData>) => {
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
   }, []);
 
   const addNode = useCallback((nodeData: Partial<WorkflowNodeData>) => {
-    const newNode: Node<WorkflowNodeData> = {
+    const newNode: Node = {
       id: `${nodes.length + 1}`,
       type: 'workflowNode',
       position: { x: Math.random() * 400 + 200, y: Math.random() * 400 + 200 },

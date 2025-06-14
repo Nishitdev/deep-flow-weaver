@@ -8,12 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { WorkflowNodeData, NodeConfig } from '@/types/workflow';
+import { NodeConfig } from '@/types/workflow';
 
 interface NodeConfigPanelProps {
-  node: Node<WorkflowNodeData>;
+  node: Node;
   onClose: () => void;
-  onUpdate: (node: Node<WorkflowNodeData>) => void;
+  onUpdate: (node: Node) => void;
 }
 
 export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
@@ -21,9 +21,10 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
   onClose,
   onUpdate,
 }) => {
-  const [config, setConfig] = useState<NodeConfig>(node.data.config || {});
-  const [label, setLabel] = useState<string>(node.data.label || '');
-  const [description, setDescription] = useState<string>(node.data.description || '');
+  const nodeData = node.data as any; // Type assertion for our custom properties
+  const [config, setConfig] = useState<NodeConfig>(nodeData.config || {});
+  const [label, setLabel] = useState<string>(nodeData.label || '');
+  const [description, setDescription] = useState<string>(nodeData.description || '');
 
   const handleSave = () => {
     const updatedNode = {
@@ -39,7 +40,7 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
   };
 
   const renderConfigFields = () => {
-    switch (node.data.type) {
+    switch (nodeData.type) {
       case 'ai':
         return (
           <div className="space-y-4">
@@ -78,7 +79,7 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
       case 'trigger':
         return (
           <div className="space-y-4">
-            {node.data.label === 'Webhook' && (
+            {nodeData.label === 'Webhook' && (
               <div>
                 <Label htmlFor="webhookUrl">Webhook URL</Label>
                 <Input
@@ -89,7 +90,7 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
                 />
               </div>
             )}
-            {node.data.label === 'Schedule' && (
+            {nodeData.label === 'Schedule' && (
               <div>
                 <Label htmlFor="schedule">Cron Expression</Label>
                 <Input
@@ -121,7 +122,7 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
       case 'output':
         return (
           <div className="space-y-4">
-            {node.data.label === 'Send Email' && (
+            {nodeData.label === 'Send Email' && (
               <>
                 <div>
                   <Label htmlFor="to">To Email</Label>
