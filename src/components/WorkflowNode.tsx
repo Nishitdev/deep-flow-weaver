@@ -37,11 +37,7 @@ const getNodeStyles = (type: string) => {
   }
 };
 
-interface WorkflowNodeProps extends NodeProps {
-  onDelete?: (nodeId: string) => void;
-}
-
-export const WorkflowNode: React.FC<WorkflowNodeProps> = ({ data, selected, id, onDelete }) => {
+export const WorkflowNode: React.FC<NodeProps> = ({ data, selected, id }) => {
   const nodeData = data as any;
   const [inputValue, setInputValue] = useState(nodeData.config?.inputText || '');
   const IconComponent = iconMap[nodeData.icon as keyof typeof iconMap] || Play;
@@ -55,8 +51,8 @@ export const WorkflowNode: React.FC<WorkflowNodeProps> = ({ data, selected, id, 
   };
 
   const handleDelete = () => {
-    if (onDelete) {
-      onDelete(id);
+    if (nodeData.onDelete) {
+      nodeData.onDelete(id);
     }
   };
 
