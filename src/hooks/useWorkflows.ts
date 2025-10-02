@@ -30,12 +30,14 @@ export const useWorkflows = () => {
 
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('You must be logged in to save workflows');
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        console.error('Authentication error:', authError);
+        throw new Error('Please sign in to save workflows. Redirecting to login...');
       }
 
-      console.log('Saving workflow:', { name, nodesCount: nodes.length, edgesCount: edges.length });
+      console.log('Saving workflow for user:', user.id, { name, nodesCount: nodes.length, edgesCount: edges.length });
       
       const { data, error } = await supabase
         .from('workflows')
@@ -200,10 +202,14 @@ export const useWorkflows = () => {
   const createWorkflow = async (name: string, description: string = '') => {
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('You must be logged in to create workflows');
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        console.error('Authentication error:', authError);
+        throw new Error('Please sign in to create workflows. Redirecting to login...');
       }
+
+      console.log('Creating workflow for user:', user.id);
 
       const { data, error } = await supabase
         .from('workflows')
@@ -217,7 +223,13 @@ export const useWorkflows = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        if (error.code === '42501') {
+          throw new Error('Authentication required. Please sign in again.');
+        }
+        throw error;
+      }
 
       // Add to local state
       const newWorkflow: Workflow = {

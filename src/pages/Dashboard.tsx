@@ -8,6 +8,7 @@ import { useWorkflows, Workflow } from '@/hooks/useWorkflows';
 import { CreateWorkflowDialog } from '@/components/CreateWorkflowDialog';
 import { DeleteWorkflowDialog } from '@/components/DeleteWorkflowDialog';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -20,18 +21,34 @@ const Dashboard = () => {
   const [workflowToDelete, setWorkflowToDelete] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
-    const fetchWorkflows = async () => {
-      try {
-        await loadWorkflows();
-      } catch (error) {
-        console.error('Failed to load workflows:', error);
-      } finally {
-        setLoadingWorkflows(false);
+    // Check authentication
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth');
+        return;
       }
+
+      // Load workflows
+      const fetchWorkflows = async () => {
+        try {
+          await loadWorkflows();
+        } catch (error) {
+          console.error('Failed to load workflows:', error);
+          // If error is related to auth, redirect to login
+          if (error instanceof Error && error.message.includes('sign in')) {
+            navigate('/auth');
+          }
+        } finally {
+          setLoadingWorkflows(false);
+        }
+      };
+
+      fetchWorkflows();
     };
 
-    fetchWorkflows();
-  }, []);
+    checkAuth();
+  }, [navigate]);
 
   const handleCreateNew = () => {
     setShowCreateDialog(true);
