@@ -30,6 +30,11 @@ export const useWorkflows = () => {
 
     setIsLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('You must be logged in to save workflows');
+      }
+
       console.log('Saving workflow:', { name, nodesCount: nodes.length, edgesCount: edges.length });
       
       const { data, error } = await supabase
@@ -39,6 +44,7 @@ export const useWorkflows = () => {
           description: description.trim() || null,
           nodes: nodes as any,
           edges: edges as any,
+          user_id: user.id,
         })
         .select()
         .single();
@@ -194,6 +200,11 @@ export const useWorkflows = () => {
   const createWorkflow = async (name: string, description: string = '') => {
     setIsLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('You must be logged in to create workflows');
+      }
+
       const { data, error } = await supabase
         .from('workflows')
         .insert({
@@ -201,6 +212,7 @@ export const useWorkflows = () => {
           description,
           nodes: [],
           edges: [],
+          user_id: user.id,
         })
         .select()
         .single();

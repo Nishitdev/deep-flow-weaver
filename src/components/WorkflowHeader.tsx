@@ -1,12 +1,36 @@
 
 import React from 'react';
-import { Separator } from '@/components/ui/separator';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { LogOut } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 interface WorkflowHeaderProps {
   children?: React.ReactNode;
 }
 
 export const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ children }) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Signed Out",
+        description: "You have been signed out successfully.",
+      });
+      navigate('/auth');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="h-16 border-b border-border bg-card/50 backdrop-blur-sm">
       <div className="flex items-center justify-between h-full px-6">
@@ -24,6 +48,15 @@ export const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({ children }) => {
         
         <div className="flex items-center gap-4">
           {children}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSignOut}
+            className="gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
         </div>
       </div>
     </div>
